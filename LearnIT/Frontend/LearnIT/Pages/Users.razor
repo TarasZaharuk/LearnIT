@@ -1,0 +1,68 @@
+﻿@page "/users"
+@inject HttpClient httpClient
+@using DTOs;
+
+<MudTable ServerData="ServerReload" Dense="true" Hover="true" @ref="table">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Users</MudText>
+        <MudSpacer />
+        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>First name</MudTh>
+        <MudTh>Last name</MudTh>
+        <MudTh>Gender</MudTh>
+        <MudTh>Birth date</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+            <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+            <MudTd DataLabel="Gender">@context.Gender</MudTd>
+            <MudTd DataLabel="Birth Date">@context.BirthDate</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No matching records found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Loading...</MudText>
+        </LoadingContent>
+    </MudTable>
+    @code {
+    private IEnumerable<UserDTO> pagedUsers = null!;
+    private MudTable<UserDTO> table = null!;
+
+    private int totalItems;
+    private string searchString = null!;
+
+    private async Task<TableData<UserDTO>> ServerReload(TableState state, CancellationToken token)
+    {
+        IEnumerable<UserDTO>? users = await httpClient.GetFromJsonAsync<List<UserDTO>>("/users");
+        if (users is null)
+            return new TableData<UserDTO>();
+
+        await Task.Delay(300);
+        users = users.Where(user =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (user.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (user.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        totalItems = users.Count();
+
+        pagedUsers = users.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<UserDTO>() { TotalItems = totalItems, Items = pagedUsers};
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+}

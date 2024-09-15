@@ -1,0 +1,6 @@
+@LearnIT.WebUI.Server_HostAddress = https://localhost:7123
+
+GET {{LearnIT.WebUI.Server_HostAddress}}/users
+Accept: application/json
+
+###
