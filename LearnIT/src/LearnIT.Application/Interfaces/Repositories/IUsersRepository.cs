@@ -6,9 +6,9 @@ namespace LearnIT.Application.Interfaces.Repositories
     {
         Task AddAsync(User user);
 
-        Task AddUsersAsync(List<User> users);
+        Task AddAsync(List<User> users);
 
-        Task DeleteAsync(User user);
+        Task DeleteByIdAsync(int id);
 
         Task<List<User>> GetAllAsync();
     }

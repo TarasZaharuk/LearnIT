@@ -12,22 +12,22 @@ namespace LearnIT.Application.Services
         private readonly IUsersRepository _usersRepository = usersRepository;
         private readonly IMapper _mapper = mapper;
 
-        public async Task<List<UserDTO>> GetUsersAsync()
+        public async Task<List<UserDTO>> GetAsync()
         {
             List<User> users = await _usersRepository.GetAllAsync();
             List<UserDTO> userDtos = _mapper.Map<List<User>, List<UserDTO>>(users);
             return userDtos;
         }
 
-        public async Task AddUserAsync(AddUserModel addedUser)
+        public async Task AddAsync(AddUserModel addedUser)
         {
             User user = _mapper.Map<AddUserModel, User>(addedUser);
             await _usersRepository.AddAsync(user);
         }
 
-        public async Task DeleteUserAsync(User user)
+        public async Task DeleteByIdAsync(int id)
         {
-            await _usersRepository.DeleteAsync(user);
+            await _usersRepository.DeleteByIdAsync(id);
         }
     }
 }

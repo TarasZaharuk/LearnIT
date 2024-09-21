@@ -8,12 +8,8 @@ namespace LearnIT.Application.Models
 
         public string LastName { get; set; } = null!;
 
-        public Gender Gender { get; set; } = null!;
+        public int GenderId { get; set; }
 
         public DateOnly BirthDate { get; set; }
-
-        public string Email { get; set; } = null!;
-
-        public string Password { get; set; } = null!;
     }
 }

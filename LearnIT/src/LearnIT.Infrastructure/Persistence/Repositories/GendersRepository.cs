@@ -7,7 +7,7 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
     public class GendersRepository : IGendersRepository
     {
         private LearnITDBContext _learnItDbContext;
-        public GendersRepository(LearnITDBContext learnItDbContext) 
+        public GendersRepository(LearnITDBContext learnItDbContext)
         {
             _learnItDbContext = learnItDbContext;
         }
@@ -23,15 +23,19 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
             await _learnItDbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Gender gender)
+        public async Task DeleteByIdAsync(int id)
         {
+            Gender? gender = await _learnItDbContext.Genders.FindAsync(id);
+            if (gender == null)
+                return;
+
             _learnItDbContext.Genders.Remove(gender);
             await _learnItDbContext.SaveChangesAsync();
         }
 
         public async Task<List<Gender>> GetAllAsync()
         {
-            return await _learnItDbContext.Genders.ToListAsync(); 
+            return await _learnItDbContext.Genders.ToListAsync();
         }
 
     }

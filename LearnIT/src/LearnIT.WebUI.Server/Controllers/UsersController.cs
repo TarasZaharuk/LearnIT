@@ -19,13 +19,19 @@ namespace LearnIT.WebUI.Server.Controllers
         [HttpGet("/users")]
         public async Task<List<UserDTO>> GetUsersAsync()
         {
-            return await _usersService.GetUsersAsync();
+            return await _usersService.GetAsync();
         }
 
         [HttpPost("/user")]
         public async Task AddUser(AddUserModel user)
         {
-            await _usersService.AddUserAsync(user);
+            await _usersService.AddAsync(user);
+        }
+
+        [HttpDelete("/user/{id}")]
+        public async Task DeleteTutors(int id)
+        {
+            await _usersService.DeleteByIdAsync(id);
         }
     }
 }

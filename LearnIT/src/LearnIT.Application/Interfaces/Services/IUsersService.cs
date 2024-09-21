@@ -6,10 +6,10 @@ namespace LearnIT.Application.Interfaces.Services
 {
     public interface IUsersService
     {
-        Task<List<UserDTO>> GetUsersAsync();
+        Task<List<UserDTO>> GetAsync();
 
-        Task AddUserAsync(AddUserModel user);
+        Task AddAsync(AddUserModel user);
 
-        Task DeleteUserAsync(User user);
+        Task DeleteByIdAsync(int id);
     }
 }

@@ -12,6 +12,6 @@
 
         public int GenderId { get; set; }
 
-        public DateOnly BirthDay { get; set; }
+        public DateOnly BirthDate { get; set; }
     }
 }

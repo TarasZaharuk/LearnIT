@@ -13,13 +13,17 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
             await _usersDBContext.SaveChangesAsync();
         }
 
-        public async Task AddUsersAsync(List<User> users) 
+        public async Task AddAsync(List<User> users) 
         {
             await _usersDBContext.AddRangeAsync(users);
             await _usersDBContext.SaveChangesAsync();
         }
-        public async Task DeleteAsync(User user)
+        public async Task DeleteByIdAsync(int id)
         {
+            User? user = await _usersDBContext.Users.FindAsync(id);
+            if (user == null)
+                return;
+
             _usersDBContext.Users.Remove(user);
             await _usersDBContext.SaveChangesAsync();
         }

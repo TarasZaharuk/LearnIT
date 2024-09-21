@@ -31,10 +31,12 @@ namespace LearnIT.WebUI.Server
             string connectionString = builder.Configuration["LearnITDbConnectionString"] ?? throw new Exception("DBConectionString is null");
             builder.Services.AddDbContext<LearnITDBContext>(options => options.UseSqlServer(connectionString));
             builder.Services.AddAutoMapper(typeof(UserProfile).Assembly);
-
             builder.Services.AddTransient<IUsersRepository, UsersRepository>();
+            builder.Services.AddTransient<ITutorsRepository, TutorsRepository>();
+            builder.Services.AddTransient<ISkillsRepository, SkillsRepository>();
             builder.Services.AddTransient<IGendersRepository, GendersRepository>();
             builder.Services.AddTransient<IUsersService, UsersService>();
+            builder.Services.AddTransient<ITutorsService, TutorsService>();
 
             var app = builder.Build();
 

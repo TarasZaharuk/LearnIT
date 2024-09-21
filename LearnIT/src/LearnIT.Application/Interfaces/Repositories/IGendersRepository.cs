@@ -8,7 +8,7 @@ namespace LearnIT.Application.Interfaces.Repositories
 
         Task AddGendersAsync(List<Gender> genders);
 
-        Task DeleteAsync(Gender gender);
+        Task DeleteByIdAsync(int id);
 
         Task<List<Gender>> GetAllAsync();
     }
