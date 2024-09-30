@@ -18,8 +18,10 @@
 
         public string SummaryOfQualification { get; set; } = null!;
 
-        public string? GitHubUrl {  get; set; }
+        public string? GitHubUrl { get; set; }
 
         public string? LinkedInUrl { get; set; }
+
+        public byte[] Logo { get; set; } = [];
     }
 }

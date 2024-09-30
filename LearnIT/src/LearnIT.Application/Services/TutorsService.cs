@@ -56,5 +56,18 @@ namespace LearnIT.Application.Services
             List<Tutor> tutors = await _tutorsRepository.GetAllAsync();
             return _mapper.Map<List<Tutor>, List<TutorDTO>>(tutors);
         }
+
+        public async Task SetLogoAsync(int tutorId, byte[] logo)
+        {
+            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'Id'");
+            tutor.Logo = logo;
+            await _tutorsRepository.UpdateAsync(tutor);
+        }
+
+        public async Task<byte[]> GetLogoAsync(int tutorId)
+        {
+            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'Id'");
+            return tutor.Logo;
+        }
     }
 }

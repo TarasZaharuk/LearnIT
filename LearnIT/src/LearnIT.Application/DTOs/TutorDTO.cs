@@ -21,5 +21,7 @@ namespace LearnIT.Application.DTOs
         public string? GitHubUrl { get; set; }
 
         public string? LinkedInUrl { get; set; }
+
+        public string LogoUrl => $"https://localhost:7123/tutors/{Id}/logo";
     }
 }

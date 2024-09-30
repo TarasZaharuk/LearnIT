@@ -17,11 +17,11 @@
         <MudTh>Birth date</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Id">@context.Id</MudTd>
-            <MudTd DataLabel="First Name">@context.FirstName</MudTd>
-            <MudTd DataLabel="Last Name">@context.LastName</MudTd>
-            <MudTd DataLabel="Gender">@context.Gender</MudTd>
-            <MudTd DataLabel="Birth Date">@context.BirthDate</MudTd>
+        <MudTd @onclick="@(()=>SetSelectedTutorLogoAddress(context.Id))">@context.Id</MudTd>
+            <MudTd @onclick="@(()=>SetSelectedTutorLogoAddress(context.Id))">@context.FirstName</MudTd>
+            <MudTd @onclick="@(()=>SetSelectedTutorLogoAddress(context.Id))">@context.LastName</MudTd>
+            <MudTd @onclick="@(()=>SetSelectedTutorLogoAddress(context.Id))">@context.Gender</MudTd>
+            <MudTd @onclick="@(()=>SetSelectedTutorLogoAddress(context.Id))">@context.BirthDate</MudTd>
         </RowTemplate>
         <NoRecordsContent>
             <MudText>No matching records found</MudText>
@@ -30,7 +30,10 @@
             <MudText>Loading...</MudText>
         </LoadingContent>
     </MudTable>
+    <MudImage Src="@_selectedTutorLogoAddress"></MudImage>
     @code {
+    private string _baseServerAddress = "https://localhost:7123";
+    private string _selectedTutorLogoAddress = null!;
     private IEnumerable<UserDTO> pagedUsers = null!;
     private MudTable<UserDTO> table = null!;
 
@@ -64,5 +67,10 @@
     {
         searchString = text;
         table.ReloadServerData();
+    }
+
+    public void SetSelectedTutorLogoAddress(int tutorId)
+    {
+        _selectedTutorLogoAddress = $"{_baseServerAddress}/tutors/{tutorId}/logo";
     }
 }
