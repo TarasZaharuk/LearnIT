@@ -4,6 +4,7 @@ using LearnIT.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnIT.Infrastructure.Migrations
 {
     [DbContext(typeof(LearnITDBContext))]
-    partial class LearnITDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240930150830_TutorLogo")]
+    partial class TutorLogo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,7 +39,7 @@ namespace LearnIT.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genders", (string)null);
+                    b.ToTable("Genders");
 
                     b.HasData(
                         new
@@ -65,7 +68,7 @@ namespace LearnIT.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
@@ -86,10 +89,6 @@ namespace LearnIT.Infrastructure.Migrations
                     b.Property<string>("LinkedInUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("Logo")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
                     b.Property<int?>("Rating")
                         .HasColumnType("int");
 
@@ -108,7 +107,7 @@ namespace LearnIT.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Tutors", (string)null);
+                    b.ToTable("Tutors");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.User", b =>
@@ -137,7 +136,7 @@ namespace LearnIT.Infrastructure.Migrations
 
                     b.HasIndex("GenderId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SkillTutor", b =>
@@ -152,7 +151,7 @@ namespace LearnIT.Infrastructure.Migrations
 
                     b.HasIndex("TutorId");
 
-                    b.ToTable("SkillTutor", (string)null);
+                    b.ToTable("SkillTutor");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>

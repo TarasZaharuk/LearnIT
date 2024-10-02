@@ -1,0 +1,34 @@
+﻿@using LearnIT.DTOs
+
+<MudCard Style="margin:10px" Class="border-solid border-2 mud-border-primary pa-4">
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12" sm="2">
+                <MudImage Src="https://mudblazor.com/images/mony.jpg" Alt="Mony the dog" Elevation="25" Class="rounded-lg" />
+                @if (Tutor.Rating != null)
+                {
+                    <MudRating Disabled="true" SelectedValue="@Tutor.Rating.Value" />
+                }
+            </MudItem>
+            <MudItem xs="12" sm="8">
+                <MudText Style="font-weight:bold">@Tutor.User.FirstName @Tutor.User.LastName - @Tutor.JobTitle</MudText>
+                <MudCheckBox ReadOnly="true" Value="true">@string.Join(", ", Tutor.Skills.Take(5))</MudCheckBox>
+                <MudText Typo="Typo.body2">@Tutor.SummaryOfQualification</MudText>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                </MudCardActions>
+            </MudItem>
+                <MudItem xs="12" sm="2">
+                    <MudText Style="font-weight:bold">UAH @Tutor.WagePerHour</MudText>
+                    <MudText Style="font-size:small">per hour</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+
+    @code {
+    [Parameter]
+
+    public TutorDTO Tutor { get; set; } = null!;
+}

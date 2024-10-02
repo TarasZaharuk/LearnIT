@@ -1,14 +1,12 @@
-﻿namespace LearnIT.Domain.Entities
+﻿namespace LearnIT.DTOs
 {
-    public class Tutor
+    public class TutorDTO
     {
         public int Id { get; set; }
 
-        public User User { get; set; } = null!;
+        public UserDTO User { get; set; } = null!;
 
-        public int UserId { get; set; }
-
-        public ICollection<Skill> Skills { get; set; } = [];
+        public List<string> Skills { get; set; } = null!;
 
         public int? Rating { get; set; }
 
@@ -22,6 +20,6 @@
 
         public string? LinkedInUrl { get; set; }
 
-        public byte[] Logo { get; set; } = [];
+        public string LogoUrl { get; set; } = null!;
     }
 }

@@ -1,0 +1,67 @@
+﻿@page "/tutors"
+@using DTOs;
+@using LearnIT.Components
+
+@foreach (var tutor in Tutors)
+{
+    <TutorListItemCard Tutor="tutor"></TutorListItemCard>
+}
+
+@code {
+    IList<TutorDTO> Tutors;
+    public TutorsList()
+    {
+        Tutors = InitTutors();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private IList<TutorDTO> InitTutors()
+    {
+       return new List<TutorDTO>
+       {
+           new TutorDTO
+           {
+               Id = 1,
+               WagePerHour = 10,
+               JobTitle = "Math Tutor",
+               Skills = new List<string> { "Math", "Algebra", "Calculus" },
+               SummaryOfQualification="I have a degree in Mathematics and I have been tutoring for 5 years.",
+               User = new UserDTO
+               {
+                   Id = 1,
+                   FirstName = "John",
+                   LastName = "Doe",
+                   BirthDate = new DateOnly(1990, 1, 1),
+                   Gender = "Male",
+               },
+               LinkedInUrl = "https://www.linkedin.com/in/johndoe",
+               Rating = 5,
+               LogoUrl = $"https://localhost:7123/tutors/1/logo"
+           },
+           new TutorDTO
+           {
+               Id = 1,
+               WagePerHour = 10,
+               JobTitle = "C# tutoe",
+               Skills = new List<string> { "CLR", "EF", "Azure" },
+               SummaryOfQualification="I have a degree in Mathematics and I have been tutoring for 5 years.",
+               User = new UserDTO
+               {
+                   Id = 1,
+                   FirstName = "Taras",
+                   LastName = "Zaharuk",
+                   BirthDate = new DateOnly(1990, 1, 1),
+                   Gender = "Male",
+               },
+               LinkedInUrl = "https://www.linkedin.com/in/johndoe",
+               Rating = 3,
+               LogoUrl = $"https://localhost:7123/tutors/1/logo"
+           },
+       };
+    }
+}
+

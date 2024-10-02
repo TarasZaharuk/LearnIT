@@ -1,6 +1,5 @@
 ﻿using LearnIT.Application.DTOs;
 using LearnIT.Application.Models;
-using LearnIT.Domain.Entities;
 
 namespace LearnIT.Application.Interfaces.Services
 {
@@ -15,5 +14,10 @@ namespace LearnIT.Application.Interfaces.Services
         Task DeleteAllAsync();
 
         Task AddSkillsAsync(AddTutorSkillsModel addTutorSkills);
+
+        Task SetLogoAsync(int tutorId , byte[] logo);
+
+        Task<byte[]> GetLogoAsync(int tutorId);
+
     }
 }

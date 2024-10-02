@@ -22,6 +22,13 @@ namespace LearnIT.WebUI.Server.Controllers
             return await _tutorsService.GetAsync();
         }
 
+        [HttpGet("/tutors/{id}/logo")]
+        public async Task<IActionResult> GetTutorLogoAsync(int id)
+        {
+            byte[] logo = await _tutorsService.GetLogoAsync(id);
+            return File(logo,"image/jpeg");
+        }
+
         [HttpPost("/tutor")]
         public async Task AddTutor(AddTutorModel addTutor)
         {
@@ -34,7 +41,23 @@ namespace LearnIT.WebUI.Server.Controllers
             await _tutorsService.AddSkillsAsync(addTutorSkills);
         }
 
-        [HttpDelete("/tutor/{id}")]
+        [HttpPost("/tutors/{id}/logo")]
+        public async Task<IActionResult> AddLogo(IFormFile formFile,int id)
+        {
+            byte[] logo = [];
+            if (formFile.ContentType != "image/jpeg")
+                return BadRequest(new BadImageFormatException());
+
+            using var stream = new MemoryStream();
+            await formFile.CopyToAsync(stream);
+            logo = stream.ToArray();
+            
+
+            await _tutorsService.SetLogoAsync(id, logo);
+            return Ok();
+        }
+
+        [HttpDelete("/tutors/{id}")]
         public async Task DeleteTutor(int id)
         {
             await _tutorsService.DeleteByIdAsync(id);
