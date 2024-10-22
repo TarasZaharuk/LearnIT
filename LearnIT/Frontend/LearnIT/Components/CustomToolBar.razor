@@ -1,0 +1,40 @@
+﻿        <MudStack Style="width:100%" Spacing="0">
+            <MudStack Style="width:100%" Row="true">
+                @if (Count != null)
+                {
+                    <MudText Style="font-weight:bold;margin-block:8px" Align="Align.Center">Found:@Count</MudText>
+                }
+                <MudSpacer />
+                    <MudTextField Placeholder="Search on name"
+                                  @bind-Value="_searchedString"
+                                  TextChanged="OnTextChanged"
+                                  FullWidth="true"
+                                  Adornment="Adornment.End"
+                                  Variant="Variant.Outlined"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Small"
+                                  Margin="Margin.Dense">
+                    </MudTextField>
+                <MudSpacer />
+                    @TopRightButtonContent
+            </MudStack>
+            @ToolBarContent
+        </MudStack>
+
+@code {
+    [Parameter]
+    public RenderFragment? ToolBarContent { get; set; }
+    [Parameter]
+    public RenderFragment? TopRightButtonContent { get; set; }
+    [Parameter]
+    public string? Count { get; set; }
+    [Parameter]
+    public EventCallback<string> SearchedStringChange { get; set; }
+
+    private string? _searchedString;
+
+    private async Task OnTextChanged()
+    {
+        await SearchedStringChange.InvokeAsync(_searchedString);
+    }
+}

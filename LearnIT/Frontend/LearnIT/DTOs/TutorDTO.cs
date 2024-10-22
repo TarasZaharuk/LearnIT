@@ -6,7 +6,7 @@
 
         public UserDTO User { get; set; } = null!;
 
-        public List<string> Skills { get; set; } = null!;
+        public List<Skill> Skills { get; set; } = null!;
 
         public int? Rating { get; set; }
 

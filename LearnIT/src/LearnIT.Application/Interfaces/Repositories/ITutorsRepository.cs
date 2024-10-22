@@ -1,4 +1,5 @@
-﻿using LearnIT.Domain.Entities;
+﻿using Shared;
+using LearnIT.Domain.Entities;
 
 namespace LearnIT.Application.Interfaces.Repositories
 {
@@ -13,6 +14,8 @@ namespace LearnIT.Application.Interfaces.Repositories
         Task DeleteAllAsync();
 
         Task<List<Tutor>> GetAllAsync();
+
+        Task<List<Tutor>> GetAsync(TutorsFilterModel filter);
 
         Task<Tutor?> GetByIdAsync(int id);
 

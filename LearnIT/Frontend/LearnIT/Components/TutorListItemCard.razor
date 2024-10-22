@@ -1,34 +1,50 @@
 ﻿@using LearnIT.DTOs
 
-<MudCard Style="margin:10px" Class="border-solid border-2 mud-border-primary pa-4">
+<MudCard Style="margin:10px; width:100%;" Class="border-solid border-2 mud-border-primary pa-4 hover-effect">
     <MudCardContent>
         <MudGrid>
-            <MudItem xs="12" sm="2">
-                <MudImage Src="https://mudblazor.com/images/mony.jpg" Alt="Mony the dog" Elevation="25" Class="rounded-lg" />
-                @if (Tutor.Rating != null)
-                {
-                    <MudRating Disabled="true" SelectedValue="@Tutor.Rating.Value" />
-                }
-            </MudItem>
-            <MudItem xs="12" sm="8">
-                <MudText Style="font-weight:bold">@Tutor.User.FirstName @Tutor.User.LastName - @Tutor.JobTitle</MudText>
-                <MudCheckBox ReadOnly="true" Value="true">@string.Join(", ", Tutor.Skills.Take(5))</MudCheckBox>
-                <MudText Typo="Typo.body2">@Tutor.SummaryOfQualification</MudText>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
-                </MudCardActions>
-            </MudItem>
-                <MudItem xs="12" sm="2">
+            <MudItem xs="12" sm="10">
+                <MudStack Spacing="2" Row="true">
+                    <MudStack>
+                        <MudImage Width="150" Height="150" Src="@Tutor.LogoUrl" Alt="Logo" />
+                        @if (Tutor.Rating != null)
+                        {
+                            <MudRating Disabled="true" SelectedValue="@Tutor.Rating.Value" />
+                        }
+                    </MudStack>
+                    <MudStack>
+                        <MudText Style="font-weight:bold">@Tutor.User.FirstName @Tutor.User.LastName - @Tutor.JobTitle</MudText>
+                            <MudCheckBox CheckedIcon="@Icons.Material.Filled.DeveloperMode" Size="Size.Small" ReadOnly="true" Value="true">@string.Join(", ", Tutor.Skills.Select(t => t.SkillName).Take(5))</MudCheckBox>
+                            <MudText Typo="Typo.body1">@Tutor.SummaryOfQualification</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="6" sm="2">
                     <MudText Style="font-weight:bold">UAH @Tutor.WagePerHour</MudText>
                     <MudText Style="font-size:small">per hour</MudText>
+                    <br />
+                    <MudStack>
+                        <MudButton Href="@Tutor.GitHubUrl"
+                                   Size="@Size.Small"
+                                   Target="_blank"
+                                   Variant="Variant.Filled"
+                                   EndIcon="@Icons.Custom.Brands.GitHub"
+                                   Color="Color.Primary">GitHub</MudButton>
+                        <MudButton Href="@Tutor.LinkedInUrl"
+                                   Size="@Size.Small"
+                                   Target="_blank"
+                                   Variant="Variant.Filled"
+                                   EndIcon="@Icons.Custom.Brands.LinkedIn"
+                                   Color="Color.Primary">LinkedIn</MudButton>
+                    </MudStack>
                 </MudItem>
             </MudGrid>
         </MudCardContent>
     </MudCard>
-
 
     @code {
     [Parameter]
 
     public TutorDTO Tutor { get; set; } = null!;
 }
+

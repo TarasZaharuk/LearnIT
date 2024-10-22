@@ -2,6 +2,7 @@
 using LearnIT.Application.Interfaces.Services;
 using LearnIT.Application.Models;
 using Microsoft.AspNetCore.Mvc;
+using Shared;
 
 namespace LearnIT.WebUI.Server.Controllers
 {
@@ -17,9 +18,9 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpGet("/tutors")]
-        public async Task<List<TutorDTO>> GetTutorsAsync()
+        public async Task<List<TutorDTO>> GetTutorsAsync([FromQuery]TutorsFilterModel tutorsFilter)
         {
-            return await _tutorsService.GetAsync();
+            return await _tutorsService.GetAsync(tutorsFilter);
         }
 
         [HttpGet("/tutors/{id}/logo")]

@@ -1,67 +1,184 @@
 ﻿@page "/tutors"
+@inject HttpClient httpClient
 @using DTOs;
 @using LearnIT.Components
+@using Shared
+@using System.Text
+@inject IJSRuntime JS
 
-@foreach (var tutor in Tutors)
+@if(_tutors == null)
 {
-    <TutorListItemCard Tutor="tutor"></TutorListItemCard>
+    <MudProgressLinear Style=""  Size="Size.Large" Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <ListContainer>
+        <FilterDrawerContent>
+            <FilterDrawer DrawerVariant="@_drawerVariant" @bind-Open="_filterDrawerOpen">
+                <WageSlider @ref="_wageSlider" MaxWage="_maxWage" MinWage="_minWage" LowerWageChanged="OnFromWageChanged" UpperWageChanged="OnToWageChanged"/>
+                @if (_skills != null)
+                {
+                    <MudText Style="left:5%;">Skills</MudText>
+                    <MudSelect OnClose="LoadFilteredTutors"
+                               @onselectstart="LoadFilteredTutors"
+                               Dense="true"
+                               FullWidth="true"
+                               Clearable="true"
+                               Variant="Variant.Outlined"
+                               T="Skill" MultiSelection="true"
+                               @onselectionchange="LoadFilteredTutors"
+                               @bind-SelectedValues="_selectedSkills">
+                        @foreach (Skill skill in _skills)
+                        {
+                            <MudSelectItem T="Skill" Value="@skill">@skill.SkillName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </FilterDrawer>
+        </FilterDrawerContent>
+
+        <TopStickyContent>
+            <CustomToolBar Count="@_tutors.Count.ToString()" SearchedStringChange="OnSearchStringChanged">
+                <TopRightButtonContent>
+                    @if (_lowerWage != null || _upperWage != null || _selectedSkills != null)
+                    {
+                        <MudButton Size="Size.Small" OnClick="ClearFilters">Clear filters</MudButton>
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterAlt" OnClick="FilterDrawerToggle"/>
+                </TopRightButtonContent>
+                <ToolBarContent>
+                    @if (_selectedSkills != null && _selectedSkills.Any())
+                    {
+                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="0" Style="overflow-y:auto;background-color:white;">
+                            @foreach (var skill in _selectedSkills)
+                            {
+                                <MudChip Size="Size.Small" Variant="Variant.Filled" Style="background-color:gainsboro;" T="Skill" Value="skill" Text="@skill.SkillName" Color="Color.Default" OnClose="CloseSkill"></MudChip>
+                            }
+                        </MudStack>
+                    }
+                </ToolBarContent>
+            </CustomToolBar>
+        </TopStickyContent>
+
+        <MainContent>
+            @foreach (var tutor in _tutors)
+            {
+                <div class="d-flex">
+                    <TutorListItemCard Tutor="tutor"></TutorListItemCard>
+                </div>
+            }
+        </MainContent>
+    </ListContainer>
 }
 
 @code {
-    IList<TutorDTO> Tutors;
-    public TutorsList()
+    private IList<TutorDTO>? _tutors = null!;
+    private bool _filterDrawerOpen = false;
+    private bool _clearFilters = false;
+    private string _searchedTutors = null!;
+    private double _minWage = 40;
+    private double _maxWage = 100;
+    private double? _lowerWage = null!;
+    private double? _upperWage = null!;
+    public int BrowserWindowWidth { get; set; }
+    public int BrowserWindowHeight { get; set; }
+    private IList<Skill>? _skills = null!;
+    private IEnumerable<Skill> _selectedSkills { get; set; } = null!;
+    private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
+
+    private WageSlider _wageSlider = null!;
+
+
+    protected override async Task OnInitializedAsync()
     {
-        Tutors = InitTutors();
+        await InitSkills();
+        await LoadFilteredTutors();
     }
 
-    protected override Task OnInitializedAsync()
+    private async Task InitSkills()
     {
-        return base.OnInitializedAsync();
+        _skills = await httpClient.GetFromJsonAsync<List<Skill>>("/skills");
     }
 
-    private IList<TutorDTO> InitTutors()
+    private async Task LoadFilteredTutors()
     {
-       return new List<TutorDTO>
-       {
-           new TutorDTO
-           {
-               Id = 1,
-               WagePerHour = 10,
-               JobTitle = "Math Tutor",
-               Skills = new List<string> { "Math", "Algebra", "Calculus" },
-               SummaryOfQualification="I have a degree in Mathematics and I have been tutoring for 5 years.",
-               User = new UserDTO
-               {
-                   Id = 1,
-                   FirstName = "John",
-                   LastName = "Doe",
-                   BirthDate = new DateOnly(1990, 1, 1),
-                   Gender = "Male",
-               },
-               LinkedInUrl = "https://www.linkedin.com/in/johndoe",
-               Rating = 5,
-               LogoUrl = $"https://localhost:7123/tutors/1/logo"
-           },
-           new TutorDTO
-           {
-               Id = 1,
-               WagePerHour = 10,
-               JobTitle = "C# tutoe",
-               Skills = new List<string> { "CLR", "EF", "Azure" },
-               SummaryOfQualification="I have a degree in Mathematics and I have been tutoring for 5 years.",
-               User = new UserDTO
-               {
-                   Id = 1,
-                   FirstName = "Taras",
-                   LastName = "Zaharuk",
-                   BirthDate = new DateOnly(1990, 1, 1),
-                   Gender = "Male",
-               },
-               LinkedInUrl = "https://www.linkedin.com/in/johndoe",
-               Rating = 3,
-               LogoUrl = $"https://localhost:7123/tutors/1/logo"
-           },
-       };
+        _tutors = await httpClient.GetFromJsonAsync<List<TutorDTO>>($"/tutors?{GetQueryParameters()}");
+    }
+
+    private void FilterDrawerToggle()
+    {
+        _filterDrawerOpen = !_filterDrawerOpen;
+        StateHasChanged();
+    }
+
+    private async Task ClearFilters()
+    {
+        _lowerWage = null;
+        _upperWage = null;
+        _selectedSkills = null!;
+        _wageSlider.SetValuesToDefult();
+        StateHasChanged();
+        await LoadFilteredTutors();
+    }
+
+    private async Task OnSearchStringChanged(string name)
+    {
+        _searchedTutors = name;
+        await LoadFilteredTutors();
+    }
+
+    private async Task OnFromWageChanged(double fromWage)
+    {
+        _lowerWage = fromWage;
+        await LoadFilteredTutors();
+    }
+
+    private async Task OnToWageChanged(double toWage)
+    {
+        _upperWage = toWage;
+        await LoadFilteredTutors();
+    }
+
+    private async Task CloseSkill(MudChip<Skill> skill)
+    {
+        if (_selectedSkills == null || !_selectedSkills.Any())
+            return;
+        var updatedSkills = _selectedSkills.ToList();
+        updatedSkills.Remove(skill.Value!);
+        _selectedSkills = updatedSkills;
+        await LoadFilteredTutors();
+    }
+
+    private string GetQueryParameters()
+    {
+        string skillsQuery = null!;
+        StringBuilder quaryParametersBuilder = new StringBuilder();
+
+        if (_selectedSkills != null && _selectedSkills.Any())
+            skillsQuery = string.Join("&", _selectedSkills.ToList().Select(s => $"SelectedSkillsIds={Uri.EscapeDataString(s.Id.ToString())}"));
+
+        quaryParametersBuilder.Append($"LowerWage={_lowerWage}&");
+        quaryParametersBuilder.Append($"UpperWage={_upperWage}&");
+        quaryParametersBuilder.Append($"Name={_searchedTutors ?? " "}&");
+        quaryParametersBuilder.Append($"{skillsQuery}");
+        return quaryParametersBuilder.ToString();
+    }
+
+    [JSInvokable]
+    public void OnResize(int width, int height)
+    {
+        if (BrowserWindowWidth == width && BrowserWindowHeight == height) return;
+        BrowserWindowWidth = width;
+        BrowserWindowHeight = height;
+        if (BrowserWindowWidth < 1010)
+            _drawerVariant = DrawerVariant.Temporary;
+        else _drawerVariant = DrawerVariant.Persistent;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("window.registerViewportChangeCallback", DotNetObjectReference.Create(this));
     }
 }
-

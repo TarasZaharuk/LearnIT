@@ -1,16 +1,28 @@
 ﻿@inherits LayoutComponentBase
-
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<div class="page" style="padding:0; left:0;">
+    <div class="sidebar" style="padding:0; left:0;">
+        <h1 style="margin-left:10px">LearnIT</h1>
         <NavMenu />
-        <MudThemeProvider />
-        <MudPopoverProvider />
     </div>
 
     <main>
-
-        <article class="content px-4">
+        <article class="content px-4" style="padding:0; left:0;">
             @Body
         </article>
     </main>
 </div>
+
+<script>
+    window.registerViewportChangeCallback = (dotnetHelper) => {
+        window.addEventListener('load', () => {
+            dotnetHelper.invokeMethodAsync('OnResize', window.innerWidth, window.innerHeight);
+        });
+        window.addEventListener('resize', () => {
+            dotnetHelper.invokeMethodAsync('OnResize', window.innerWidth, window.innerHeight);
+        });
+    }
+</script>

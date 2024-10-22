@@ -22,6 +22,6 @@
 
         public string? LinkedInUrl { get; set; }
 
-        public byte[] Logo { get; set; } = [];
+        public byte[]? Logo { get; set; } = null!;
     }
 }
