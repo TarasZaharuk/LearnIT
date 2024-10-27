@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{78
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LearnIT", "Frontend\LearnIT\LearnIT.csproj", "{385F974B-419F-40ED-AED6-549CE4E47480}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{EF617633-B647-4B30-953E-E7924FA6CADF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{385F974B-419F-40ED-AED6-549CE4E47480}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{385F974B-419F-40ED-AED6-549CE4E47480}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{385F974B-419F-40ED-AED6-549CE4E47480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF617633-B647-4B30-953E-E7924FA6CADF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF617633-B647-4B30-953E-E7924FA6CADF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF617633-B647-4B30-953E-E7924FA6CADF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF617633-B647-4B30-953E-E7924FA6CADF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

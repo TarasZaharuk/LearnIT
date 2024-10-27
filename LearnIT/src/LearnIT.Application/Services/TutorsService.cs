@@ -4,6 +4,10 @@ using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
 using LearnIT.Application.Models;
 using LearnIT.Domain.Entities;
+using System.Configuration;
+using Shared;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 namespace LearnIT.Application.Services
 {
@@ -12,18 +16,21 @@ namespace LearnIT.Application.Services
         private readonly ITutorsRepository _tutorsRepository;
         private readonly ISkillsRepository _skillsRepository;
         private readonly IMapper _mapper;
-        public TutorsService(ITutorsRepository tutorsRepository, ISkillsRepository skillsRepository, IMapper mapper)
+        private readonly IConfiguration _configuration;
+
+        public TutorsService(ITutorsRepository tutorsRepository, ISkillsRepository skillsRepository, IMapper mapper, IConfiguration configuration)
         {
             _tutorsRepository = tutorsRepository;
             _skillsRepository = skillsRepository;
             _mapper = mapper;
+            _configuration = configuration;
         }
         public async Task AddAsync(AddTutorModel addedTutor)
         {
             Tutor tutor = _mapper.Map<AddTutorModel, Tutor>(addedTutor);
             List<Skill> skills = await _skillsRepository.GetByIdsAsync(addedTutor.SkillsIds);
-            if (skills.Any())
-                tutor.Skills = skills;
+            tutor.Skills = skills;
+
             await _tutorsRepository.AddAsync(tutor);
         }
 
@@ -50,11 +57,15 @@ namespace LearnIT.Application.Services
         {
             await _tutorsRepository.DeleteAsync(id);
         }
-
-        public async Task<List<TutorDTO>> GetAsync()
+        public async Task<List<TutorDTO>> GetAsync(TutorsFilterModel tutorsFilter)
         {
-            List<Tutor> tutors = await _tutorsRepository.GetAllAsync();
-            return _mapper.Map<List<Tutor>, List<TutorDTO>>(tutors);
+            List<Tutor> tutors = await _tutorsRepository.GetAsync(tutorsFilter);
+            List<TutorDTO> tutorDTOs = _mapper.Map<List<Tutor>, List<TutorDTO>>(tutors);
+            string serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
+            foreach (var tutor in tutorDTOs)
+                tutor.LogoUrl = $"{serverAddress}/tutors/{tutor.Id}/logo";
+
+            return tutorDTOs;
         }
 
         public async Task SetLogoAsync(int tutorId, byte[] logo)
@@ -67,7 +78,22 @@ namespace LearnIT.Application.Services
         public async Task<byte[]> GetLogoAsync(int tutorId)
         {
             Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'Id'");
-            return tutor.Logo;
+            if (tutor.Logo != null)
+                return tutor.Logo;
+
+            string? defultTutorLogoName = _configuration["DefultTutorLogoName"];
+            if (string.IsNullOrEmpty(defultTutorLogoName))
+                throw new ConfigurationErrorsException("DefultTutorLogoName is null or empty");
+            string? basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (basePath == null)
+                throw new Exception("ExecutingAssembly location is null");
+            string? defultTutorLogoPath = Directory.GetFiles(basePath,defultTutorLogoName,SearchOption.AllDirectories).FirstOrDefault();
+            if (string.IsNullOrEmpty(defultTutorLogoPath))
+                throw new FileNotFoundException("defultTutorLogo not found");
+
+            byte[] defultTutorLogo = await File.ReadAllBytesAsync(defultTutorLogoPath);
+
+            return defultTutorLogo;
         }
     }
 }

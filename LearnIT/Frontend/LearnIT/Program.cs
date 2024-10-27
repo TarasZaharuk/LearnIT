@@ -12,6 +12,7 @@ namespace LearnIT
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
             builder.Services.AddMudServices();
+            builder.Services.AddIgniteUIBlazor();
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7123") });
 
             await builder.Build().RunAsync();

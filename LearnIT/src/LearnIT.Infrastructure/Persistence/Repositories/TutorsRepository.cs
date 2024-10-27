@@ -1,6 +1,7 @@
 ﻿using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Shared;
 
 namespace LearnIT.Infrastructure.Persistence.Repositories
 {
@@ -46,6 +47,27 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
                .Include(t => t.User.Gender)
                .Include(t => t.Skills)
                .ToListAsync();
+        }
+
+        public async Task<List<Tutor>> GetAsync(TutorsFilterModel filter)
+        {
+            IQueryable<Tutor> filteredTutors = _learnITDBContext.Tutors
+                .Include(t => t.User)
+                .Include(t => t.User.Gender)
+                .Include(t => t.Skills);
+            if(filter == null)
+                return await filteredTutors.ToListAsync();
+
+            if (!string.IsNullOrEmpty(filter.Name))
+                filteredTutors = filteredTutors.Where(t => t.User.FirstName.Contains(filter.Name) || t.User.LastName.Contains(filter.Name));
+            if (filter.SelectedSkillsIds != null && filter.SelectedSkillsIds.Any())
+                filteredTutors = filteredTutors.Where(t => filter.SelectedSkillsIds.All(sk => t.Skills.Select(t => t.Id).Contains(sk)));
+            if (filter.LowerWage != null)
+                filteredTutors = filteredTutors.Where(t => t.WagePerHour >= filter.LowerWage);
+            if (filter.UpperWage != null)
+                filteredTutors = filteredTutors.Where(t => t.WagePerHour <= filter.UpperWage);
+
+            return await filteredTutors.ToListAsync();
         }
 
         public async Task<Tutor?> GetByIdAsync(int id)

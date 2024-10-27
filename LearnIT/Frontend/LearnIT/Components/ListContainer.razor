@@ -1,0 +1,18 @@
+﻿<MudDrawerContainer>
+    @FilterDrawerContent
+    <MudPaper>
+            <MudToolBar WrapContent="true" Style="position:sticky;right:0;top:0;background-color:white; width:100%" Class="app-bar" Dense="true">
+                 @TopStickyContent
+            </MudToolBar>
+        @MainContent
+    </MudPaper>
+</MudDrawerContainer>
+
+@code {
+    [Parameter]
+    public RenderFragment? FilterDrawerContent { get; set; }
+    [Parameter]
+    public RenderFragment? TopStickyContent { get; set; }
+    [Parameter]
+    public RenderFragment? MainContent { get; set; }
+}

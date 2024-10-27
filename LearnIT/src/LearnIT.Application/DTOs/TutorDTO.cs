@@ -8,7 +8,7 @@ namespace LearnIT.Application.DTOs
 
         public UserDTO User { get; set; } = null!;
 
-        public List<Skill> Skills { get; set; } = [];
+        public List<Skill> Skills { get; set; } = null!;
 
         public int? Rating { get; set; }  
 
@@ -22,6 +22,6 @@ namespace LearnIT.Application.DTOs
 
         public string? LinkedInUrl { get; set; }
 
-        public string LogoUrl => $"https://localhost:7123/tutors/{Id}/logo";
+        public string LogoUrl { get; set; } = null!;
     }
 }

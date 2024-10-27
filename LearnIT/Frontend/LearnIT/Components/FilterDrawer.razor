@@ -1,0 +1,28 @@
+﻿<MudDrawer Open="@Open"
+           OpenChanged="OnOpenChanged"
+           Anchor="Anchor.End"
+           Class="mud-height-full app"
+           Style="position:fixed;top:0;overflow-x:hidden"
+           Variant="DrawerVariant"
+           OverlayAutoClose="true">
+    <MudText Align="Align.Center" Typo="Typo.h5">Filters</MudText>
+    <MudStack Style="width:90%;margin-left:15px">
+        @ChildContent
+    </MudStack>
+</MudDrawer>
+
+@code{
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    [Parameter] 
+    public bool Open {get; set;}
+    [Parameter]
+    public EventCallback<bool> OpenChanged { get; set; }
+    [Parameter]
+    public DrawerVariant DrawerVariant { get; set; }
+
+    private async Task OnOpenChanged()
+    {
+        await OpenChanged.InvokeAsync(Open);
+    }
+}
