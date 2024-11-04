@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using LearnIT.Application.DTOs;
-using LearnIT.Application.Models;
+using Shared;
 using LearnIT.Domain.Entities;
 
 namespace LearnIT.Application.Profiles

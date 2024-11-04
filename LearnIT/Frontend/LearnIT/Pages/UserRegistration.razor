@@ -1,27 +1,38 @@
 ﻿@page "/user/registration"
+@using LearnIT.Components
 @using MudBlazor;
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
-@using Components;
 @using DTOs;
+@using Shared;
+@using System.Text.Json;
+@layout LandingLayout
 @inject HttpClient HttpClient
-@inject IDialogService Dialog
-
-<MudButton OnClick="OpenDialog" >Sign up</MudButton>
+@if (_genders != null)
+{
+    <MudContainer MaxWidth="MaxWidth.False">
+        <MudGrid Justify="Justify.Center" Style="align-items:center">
+            <MudPaper Class="centered-paper" Style="width:40%;align-items:end;vertical-align:middle">
+                <SignUpForm Genders="_genders" OnUserRegistrationCompleted="HandleUserRegistrationModel" />
+            </MudPaper>
+        </MudGrid>
+    </MudContainer>
+}
 
 @code {
-    private IList<string> _genders = null!;
+    private IList<Gender> _genders = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGendersAsync();
+    }
 
     private async Task LoadGendersAsync()
     {
-        List<Gender> genders = await HttpClient.GetFromJsonAsync<List<Gender>>("/genders") ?? throw new Exception("genders is null");
-        _genders = genders.Select(g => g.Name).ToList();
+        _genders = await HttpClient.GetFromJsonAsync<List<Gender>>("/genders") ?? throw new Exception("genders is null");
     }
-    private async Task OpenDialog()
+    private async Task HandleUserRegistrationModel(AddUserModel addedUser)
     {
-        await LoadGendersAsync();
-        DialogParameters<SignUpDialog> parameters = new() { { d => d.Genders, _genders } };
-        IDialogReference dialog = await Dialog.ShowAsync<SignUpDialog>("Sign up dialog", parameters);
-        DialogResult? registartionDialogResponse = await dialog.Result;
+        await HttpClient.PostAsJsonAsync("/user", addedUser);
     }
 }

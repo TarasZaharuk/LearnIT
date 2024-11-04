@@ -3,7 +3,7 @@ using AutoMapper;
 using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
-using LearnIT.Application.Models;
+using Shared;
 
 namespace LearnIT.Application.Services
 {

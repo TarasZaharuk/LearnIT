@@ -1,6 +1,4 @@
-﻿using LearnIT.Domain.Entities;
-
-namespace LearnIT.Application.Models
+﻿namespace Shared
 {
     public class AddUserModel
     {
@@ -11,5 +9,9 @@ namespace LearnIT.Application.Models
         public int GenderId { get; set; }
 
         public DateOnly BirthDate { get; set; }
+
+        public string Email { get; set; } = null!;
+
+        public string Password { get; set; } = null!;
     }
 }
