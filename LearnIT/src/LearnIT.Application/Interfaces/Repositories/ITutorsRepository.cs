@@ -5,7 +5,7 @@ namespace LearnIT.Application.Interfaces.Repositories
 {
     public interface ITutorsRepository
     {
-        Task AddAsync(Tutor tutor);
+        Task<int> AddAsync(Tutor tutor);
 
         Task AddAsync(List<Tutor> tutors);
 
@@ -15,7 +15,7 @@ namespace LearnIT.Application.Interfaces.Repositories
 
         Task<List<Tutor>> GetAllAsync();
 
-        Task<List<Tutor>> GetAsync(TutorsFilterModel filter);
+        Task<List<Tutor>> GetActiveAsync(TutorsFilterModel filter);
 
         Task<Tutor?> GetByIdAsync(int id);
 

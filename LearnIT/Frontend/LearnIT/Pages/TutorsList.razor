@@ -155,7 +155,7 @@ else
         StringBuilder quaryParametersBuilder = new StringBuilder();
 
         if (_selectedSkills != null && _selectedSkills.Any())
-            skillsQuery = string.Join("&", _selectedSkills.ToList().Select(s => $"SelectedSkillsIds={Uri.EscapeDataString(s.Id.ToString())}"));
+            skillsQuery = string.Join("&", _selectedSkills.ToList().Select(s => $"SelectedSkills={Uri.EscapeDataString(s.SkillName)}"));
 
         quaryParametersBuilder.Append($"LowerWage={_lowerWage}&");
         quaryParametersBuilder.Append($"UpperWage={_upperWage}&");

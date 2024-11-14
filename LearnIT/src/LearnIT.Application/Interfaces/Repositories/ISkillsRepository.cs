@@ -4,14 +4,14 @@ namespace LearnIT.Application.Interfaces.Repositories
 {
     public interface ISkillsRepository
     {
-        Task AddAsync(Skill skill);
+        Task AddAsync(GeneralSkill skill);
 
-        Task AddAsync(List<Skill> skills);
+        Task AddAsync(List<GeneralSkill> skills);
 
         Task DeleteByIdAsync(int id);
 
-        Task<List<Skill>> GetAllAsync();
+        Task<List<GeneralSkill>> GetAllAsync();
 
-        Task<List<Skill>> GetByIdsAsync(List<int> ids);
+        Task<List<GeneralSkill>> GetByIdsAsync(List<int> ids);
     }
 }

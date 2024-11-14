@@ -14,37 +14,29 @@ namespace LearnIT.Application.Services
     public class TutorsService : ITutorsService
     {
         private readonly ITutorsRepository _tutorsRepository;
-        private readonly ISkillsRepository _skillsRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
 
-        public TutorsService(ITutorsRepository tutorsRepository, ISkillsRepository skillsRepository, IMapper mapper, IConfiguration configuration)
+        public TutorsService(ITutorsRepository tutorsRepository, IMapper mapper, IConfiguration configuration)
         {
             _tutorsRepository = tutorsRepository;
-            _skillsRepository = skillsRepository;
             _mapper = mapper;
             _configuration = configuration;
         }
-        public async Task AddAsync(AddTutorModel addedTutor)
+        public async Task<int> AddAsync(AddTutorModel addedTutor)
         {
             Tutor tutor = _mapper.Map<AddTutorModel, Tutor>(addedTutor);
-            List<Skill> skills = await _skillsRepository.GetByIdsAsync(addedTutor.SkillsIds);
-            tutor.Skills = skills;
-
-            await _tutorsRepository.AddAsync(tutor);
+            tutor.EntityState = GetEntityState(tutor);
+            int tutorId = await _tutorsRepository.AddAsync(tutor);
+            return tutorId;
         }
 
-        public async Task AddSkillsAsync(AddTutorSkillsModel addTutorSkills)
+        public async Task UpdateSkillsAsync(AddTutorSkillsModel addTutorSkills)
         {
             var tutor = await _tutorsRepository.GetByIdAsync(addTutorSkills.TutorId);
             if (tutor == null)
                 return;
-
-            var skills = await _skillsRepository.GetByIdsAsync(addTutorSkills.SkillIds);
-            if (!skills.Any())
-                return;
-
-            skills.Where(sk => !tutor.Skills.Contains(sk)).ToList().ForEach(tutor.Skills.Add);
+            tutor.Skills = addTutorSkills.Skills.Select(s => new TutorSkill { SkillName = s }).ToList();
             await _tutorsRepository.UpdateAsync(tutor);
         }
 
@@ -59,7 +51,7 @@ namespace LearnIT.Application.Services
         }
         public async Task<List<TutorDTO>> GetAsync(TutorsFilterModel tutorsFilter)
         {
-            List<Tutor> tutors = await _tutorsRepository.GetAsync(tutorsFilter);
+            List<Tutor> tutors = await _tutorsRepository.GetActiveAsync(tutorsFilter);
             List<TutorDTO> tutorDTOs = _mapper.Map<List<Tutor>, List<TutorDTO>>(tutors);
             string serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
             foreach (var tutor in tutorDTOs)
@@ -70,14 +62,14 @@ namespace LearnIT.Application.Services
 
         public async Task SetLogoAsync(int tutorId, byte[] logo)
         {
-            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'Id'");
+            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'TutorId'");
             tutor.Logo = logo;
             await _tutorsRepository.UpdateAsync(tutor);
         }
 
         public async Task<byte[]> GetLogoAsync(int tutorId)
         {
-            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'Id'");
+            Tutor tutor = await _tutorsRepository.GetByIdAsync(tutorId) ?? throw new Exception("Invalid 'TutorId'");
             if (tutor.Logo != null)
                 return tutor.Logo;
 
@@ -94,6 +86,42 @@ namespace LearnIT.Application.Services
             byte[] defultTutorLogo = await File.ReadAllBytesAsync(defultTutorLogoPath);
 
             return defultTutorLogo;
+        }
+
+        private EntityState GetEntityState(Tutor tutor)
+        {
+            bool isDraft = string.IsNullOrEmpty(tutor.JobTitle) || string.IsNullOrEmpty(tutor.SummaryOfQualification);
+            if (isDraft)
+                return EntityState.Draft;
+
+            return EntityState.Active;
+        }
+
+        public async Task UpdateGeneralInfoAsync(UpdateTutorGeneralInfoModel tutor)
+        {
+            Tutor? updatedTutor = await _tutorsRepository.GetByIdAsync(tutor.TutorId);
+            if (updatedTutor == null)
+                return;
+
+            updatedTutor.WagePerHour = tutor.WagePerHour;
+            updatedTutor.LinkedInUrl = tutor.LinkedInUrl;
+            updatedTutor.GitHubUrl = tutor.GitHubUrl;
+            updatedTutor.JobTitle = tutor.JobTitle;
+            updatedTutor.SummaryOfQualification = tutor.SummaryOfQualification;
+            updatedTutor.EntityState = GetEntityState(updatedTutor);
+
+            await _tutorsRepository.UpdateAsync(updatedTutor);
+        }
+
+        public async Task<TutorDTO?> GetByIdAsync(int id)
+        {
+            Tutor? tutor = await _tutorsRepository.GetByIdAsync(id);
+            if (tutor == null)
+                return null;
+            TutorDTO tutorDTO = _mapper.Map<Tutor,TutorDTO>(tutor);
+            string serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
+            tutorDTO.LogoUrl = $"{serverAddress}/tutors/{tutor.Id}/logo";
+            return tutorDTO;
         }
     }
 }

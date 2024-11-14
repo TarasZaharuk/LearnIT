@@ -12,10 +12,11 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
         {
             _learnITDBContext = learnITDBContext;
         }
-        public async Task AddAsync(Tutor tutor)
+        public async Task<int> AddAsync(Tutor tutor)
         {
             await _learnITDBContext.Tutors.AddAsync(tutor);
             await _learnITDBContext.SaveChangesAsync();
+            return tutor.Id;
         }
 
         public async Task AddAsync(List<Tutor> tutors)
@@ -49,19 +50,20 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
                .ToListAsync();
         }
 
-        public async Task<List<Tutor>> GetAsync(TutorsFilterModel filter)
+        public async Task<List<Tutor>> GetActiveAsync(TutorsFilterModel filter)
         {
             IQueryable<Tutor> filteredTutors = _learnITDBContext.Tutors
                 .Include(t => t.User)
                 .Include(t => t.User.Gender)
-                .Include(t => t.Skills);
-            if(filter == null)
+                .Include(t => t.Skills)
+                .Where(t => t.EntityState == Domain.Entities.EntityState.Active);
+            if (filter == null)
                 return await filteredTutors.ToListAsync();
 
             if (!string.IsNullOrEmpty(filter.Name))
                 filteredTutors = filteredTutors.Where(t => t.User.FirstName.Contains(filter.Name) || t.User.LastName.Contains(filter.Name));
-            if (filter.SelectedSkillsIds != null && filter.SelectedSkillsIds.Any())
-                filteredTutors = filteredTutors.Where(t => filter.SelectedSkillsIds.All(sk => t.Skills.Select(t => t.Id).Contains(sk)));
+            if (filter.SelectedSkills != null && filter.SelectedSkills.Any())
+                filteredTutors = filteredTutors.Where(t => filter.SelectedSkills.All(sk => t.Skills.Select(t => t.SkillName).Contains(sk)));
             if (filter.LowerWage != null)
                 filteredTutors = filteredTutors.Where(t => t.WagePerHour >= filter.LowerWage);
             if (filter.UpperWage != null)

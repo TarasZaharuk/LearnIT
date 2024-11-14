@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnIT.Infrastructure.Migrations
 {
     [DbContext(typeof(LearnITDBContext))]
-    [Migration("20240930150913_TutorLogo2")]
-    partial class TutorLogo2
+    [Migration("20241111134727_DeleteSkillsTable")]
+    partial class DeleteSkillsTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,17 +27,17 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Gender", b =>
                 {
-                    b.Property<int>("TutorId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("TutorId");
+                    b.HasKey("Id");
 
                     b.ToTable("Genders");
 
@@ -56,32 +56,33 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Skill", b =>
                 {
-                    b.Property<int>("TutorId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("SkillName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("TutorId");
+                    b.Property<int>("TutorId")
+                        .HasColumnType("int");
 
-                    b.ToTable("Skills");
+                    b.HasKey("Id");
+
+                    b.HasIndex("TutorId");
+
+                    b.ToTable("Skill");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
                 {
-                    b.Property<int>("TutorId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
-
-                    b.Property<byte[]>("Logo")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("GitHubUrl")
                         .HasColumnType("nvarchar(max)");
@@ -92,6 +93,9 @@ namespace LearnIT.Infrastructure.Migrations
 
                     b.Property<string>("LinkedInUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Logo")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int?>("Rating")
                         .HasColumnType("int");
@@ -106,7 +110,7 @@ namespace LearnIT.Infrastructure.Migrations
                     b.Property<int>("WagePerHour")
                         .HasColumnType("int");
 
-                    b.HasKey("TutorId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -116,14 +120,18 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("TutorId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -136,26 +144,24 @@ namespace LearnIT.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("TutorId");
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("GenderId");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("SkillTutor", b =>
+            modelBuilder.Entity("LearnIT.Domain.Entities.Skill", b =>
                 {
-                    b.Property<int>("SkillsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TutorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SkillsId", "TutorId");
-
-                    b.HasIndex("TutorId");
-
-                    b.ToTable("SkillTutor");
+                    b.HasOne("LearnIT.Domain.Entities.Tutor", null)
+                        .WithMany("Skills")
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
@@ -180,19 +186,9 @@ namespace LearnIT.Infrastructure.Migrations
                     b.Navigation("Gender");
                 });
 
-            modelBuilder.Entity("SkillTutor", b =>
+            modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
                 {
-                    b.HasOne("LearnIT.Domain.Entities.Skill", null)
-                        .WithMany()
-                        .HasForeignKey("SkillsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LearnIT.Domain.Entities.Tutor", null)
-                        .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }

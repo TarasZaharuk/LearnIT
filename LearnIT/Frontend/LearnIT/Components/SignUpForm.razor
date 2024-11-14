@@ -6,7 +6,7 @@
 @using Shared;
 <MudGrid>
     <MudItem xs="12" sm="22">
-        <MudForm @bind-IsValid="@success">
+        <MudForm Style="margin-left:10px; margin-right:10px" @bind-IsValid="@success">
             <MudText Align="Align.Center" Typo="Typo.h6" Style="font-weight:bold">Sign up</MudText>
             <MudTextField T="string" @bind-Value="_firstName" Label="First Name" Required="true" RequiredError="First name is required!" />
             <MudTextField T="string" @bind-Value="_lastName" Label="Last Name" Required="true" RequiredError="Last name is required!" />

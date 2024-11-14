@@ -22,9 +22,10 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpPost("/user")]
-        public async Task AddUser(AddUserModel user)
+        public async Task<IActionResult> AddUser(AddUserModel user)
         {
-            await _usersService.AddAsync(user);
+            int userId = await _usersService.AddAsync(user);
+            return Ok(userId);
         }
 
         [HttpDelete("/user/{id}")]

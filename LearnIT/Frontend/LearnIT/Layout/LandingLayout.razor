@@ -1,10 +1,15 @@
 ﻿@inherits LayoutComponentBase
 <MudThemeProvider />
 <MudPopoverProvider />
-<MudDialogProvider />
-    <div class="landing-page">
-        <MudPaper Class="landing-overlay" Elevation="0" Width="100%" MinHeight="100vh">
-            @Body
-        </MudPaper>
-    </div>
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.Small"
+                   CloseButton="true"
+                   BackdropClick="false"
+                   NoHeader="true"
+                   Position="DialogPosition.Center"
+                   CloseOnEscapeKey="true" />
+<MudSnackbarProvider />
+<div class="landing-page">
+    @Body
+</div>
 

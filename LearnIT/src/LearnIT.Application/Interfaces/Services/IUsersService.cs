@@ -7,7 +7,7 @@ namespace LearnIT.Application.Interfaces.Services
     {
         Task<List<UserDTO>> GetAsync();
 
-        Task AddAsync(AddUserModel user);
+        Task<int> AddAsync(AddUserModel user);
 
         Task DeleteByIdAsync(int id);
     }

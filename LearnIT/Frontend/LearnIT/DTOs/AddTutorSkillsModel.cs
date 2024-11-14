@@ -1,6 +1,4 @@
-﻿using LearnIT.Domain.Entities;
-
-namespace LearnIT.Application.Models
+﻿namespace LearnIT.DTOs
 {
     public class AddTutorSkillsModel
     {

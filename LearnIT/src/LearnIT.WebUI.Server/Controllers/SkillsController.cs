@@ -17,13 +17,13 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpGet("/skills")]
-        public async Task<List<Skill>> GetSkillsAsync()
+        public async Task<List<GeneralSkill>> GetSkillsAsync()
         {
             return await _skillsRepository.GetAllAsync();
         }
 
         [HttpPost("/skill")]
-        public async Task AddUser(Skill skill)
+        public async Task AddSkill(GeneralSkill skill)
         {
             await _skillsRepository.AddAsync(skill);
         }

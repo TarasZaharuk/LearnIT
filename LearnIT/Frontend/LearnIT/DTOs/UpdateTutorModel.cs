@@ -1,14 +1,8 @@
-﻿using LearnIT.Domain.Entities;
-
-namespace LearnIT.Application.Models
+﻿namespace LearnIT.DTOs
 {
-    public class AddTutorModel
+    public class UpdateTutorGeneralInfoModel
     {
-        public int UserId { get; set; }
-
-        public List<string> Skills { get; set; } = [];
-
-        public int? Rating { get; set; }
+        public int TutorId { get; set; }
 
         public int? WagePerHour { get; set; }
 

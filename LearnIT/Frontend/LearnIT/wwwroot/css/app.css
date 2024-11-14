@@ -164,3 +164,25 @@ p {
     color: #e0e0e0;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    padding: 1rem;
+    border: dashed;
+    position: relative;
+}
+
+.standard-fields {
+    max-width: 300px;
+    margin-top: 2rem;
+    margin-left: auto;
+}
+
+.popover {
+    overflow-y:auto; 
+    height:200px; 
+    margin:auto;
+    border:groove;
+}

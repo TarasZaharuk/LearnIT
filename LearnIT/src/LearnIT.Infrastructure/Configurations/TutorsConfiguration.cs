@@ -17,7 +17,8 @@ namespace LearnIT.Infrastructure.Configurations
                 .HasForeignKey<Tutor>(t => t.UserId);
             tutorsBuilder.
                 HasMany(t => t.Skills)
-                .WithMany();
+                .WithOne()
+                .HasForeignKey(s => s.TutorId);
         }
     }
 }

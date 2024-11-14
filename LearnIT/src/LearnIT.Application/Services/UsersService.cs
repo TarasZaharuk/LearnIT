@@ -19,10 +19,11 @@ namespace LearnIT.Application.Services
             return userDtos;
         }
 
-        public async Task AddAsync(AddUserModel addedUser)
+        public async Task<int> AddAsync(AddUserModel addedUser)
         {
             User user = _mapper.Map<AddUserModel, User>(addedUser);
-            await _usersRepository.AddAsync(user);
+            int userId = await _usersRepository.AddAsync(user);
+            return userId;
         }
 
         public async Task DeleteByIdAsync(int id)
