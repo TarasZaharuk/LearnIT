@@ -8,13 +8,17 @@ namespace LearnIT.Application.Interfaces.Services
     {
         Task<List<TutorDTO>> GetAsync(TutorsFilterModel tutorsFilter);
 
-        Task AddAsync(AddTutorModel tutor);
+        Task<TutorDTO?> GetByIdAsync(int id);
+
+        Task<int> AddAsync(AddTutorModel tutor);
+
+        Task UpdateGeneralInfoAsync(UpdateTutorGeneralInfoModel tutor);
 
         Task DeleteByIdAsync(int id);
 
         Task DeleteAllAsync();
 
-        Task AddSkillsAsync(AddTutorSkillsModel addTutorSkills);
+        Task UpdateSkillsAsync(AddTutorSkillsModel addTutorSkills);
 
         Task SetLogoAsync(int tutorId , byte[] logo);
 

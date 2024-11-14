@@ -1,6 +1,4 @@
-﻿using LearnIT.Domain.Entities;
-
-namespace LearnIT.Application.DTOs
+﻿namespace LearnIT.Application.DTOs
 {
     public class TutorDTO
     {
@@ -8,7 +6,7 @@ namespace LearnIT.Application.DTOs
 
         public UserDTO User { get; set; } = null!;
 
-        public List<Skill> Skills { get; set; } = null!;
+        public List<SkillDTO> Skills { get; set; } = null!;
 
         public int? Rating { get; set; }  
 

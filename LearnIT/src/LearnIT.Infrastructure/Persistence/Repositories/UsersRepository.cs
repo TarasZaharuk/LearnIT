@@ -1,16 +1,18 @@
 ﻿using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LearnIT.Infrastructure.Persistence.Repositories
 {
     public class UsersRepository(LearnITDBContext usersDBContext) : IUsersRepository
     {
         private readonly LearnITDBContext _usersDBContext = usersDBContext;
-        public async Task AddAsync(User user)
+        public async Task<int> AddAsync(User user)
         {
             await _usersDBContext.AddAsync(user);
             await _usersDBContext.SaveChangesAsync();
+            return user.Id;
         }
 
         public async Task AddAsync(List<User> users) 

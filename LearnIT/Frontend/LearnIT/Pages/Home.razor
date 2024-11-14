@@ -1,7 +1,62 @@
 ﻿@page "/"
+@layout LandingLayout
+@inject NavigationManager NavigationManeger
+@inject IDialogService DialogService
+@using DTOs
+@using LearnIT.Components
+@inherits ComponentBase
+<MudPaper Class="landing-overlay" Elevation="0" Width="100%" MinHeight="100vh">
+    <MudGrid Justify="Justify.FlexEnd">
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnLogInClick">Log In</MudButton>
+    </MudGrid>
 
-<PageTitle>Home</PageTitle>
+    <MudGrid Justify="Justify.Center" Style="display:flex; vertical-align:middle; justify-content:center; align-items:center;">
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.h1" Align="Align.Center" Color="Color.Primary" Class="main-heading">Find Your IT Tutor</MudText>
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Secondary" Class="subheading">
+                Whether you're just starting or looking to specialize, our expert tutors are here to guide you. Join us
+                to find the right mentor or become a tutor to share your expertise.
+            </MudText>
+            <br>
+            <MudGrid Justify="Justify.Center" Spacing="3">
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" OnClick="OnFindTutorClick" Color="Color.Primary" Class="action-button">Find Tutor</MudButton>
+                </MudItem>
+                <MudItem>
+                    <MudButton Variant="Variant.Outlined" OnClick="OnBecomeTutorClick" Color="Color.Secondary" Class="action-button">Become a Tutor</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
 
-<h1>Hello, world!</h1>
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardMedia Image="BobMartin.png" />
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Bob Martin</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                        I am a seasoned software craftsman with decades of experience in software development and agile methodologies. I specialize in Clean Code, Test-Driven Development (TDD), and refactoring.
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions Class="justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary">View Profile</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+@code{
+    private void OnFindTutorClick()
+    {
+        NavigationManeger.NavigateTo("/tutors");
+    }
 
-Welcome to your new app.
+    private void OnBecomeTutorClick()
+    {
+        NavigationManeger.NavigateTo("/user/registration");
+    }
+
+    private void OnLogInClick()
+    {
+        DialogService.Show<LogInDialog>();
+    }
+}

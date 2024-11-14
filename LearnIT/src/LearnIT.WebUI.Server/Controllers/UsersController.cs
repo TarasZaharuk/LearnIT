@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Services;
-using LearnIT.Application.Models;
-
+using Shared;
 namespace LearnIT.WebUI.Server.Controllers
 {
     [ApiController]
@@ -23,9 +22,10 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpPost("/user")]
-        public async Task AddUser(AddUserModel user)
+        public async Task<IActionResult> AddUser(AddUserModel user)
         {
-            await _usersService.AddAsync(user);
+            int userId = await _usersService.AddAsync(user);
+            return Ok(userId);
         }
 
         [HttpDelete("/user/{id}")]

@@ -125,17 +125,64 @@ igc-range-slider {
     align-items: baseline;
 }
 
-.app-layout {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    grid-template-rows: auto 1fr;
-    height: 100vh;
+p {
+    line-height: 2
 }
 
-.app-bar {
-    grid-column: 2 / -1;
-    position: relative; /* Relative to the main content */
-    background-color: #673ab7;
-    padding: 10px;
-    z-index: 2;
+.landing-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url(https://img.freepik.com/free-vector/blue-futuristic-networking-technology_53876-97395.jpg);
+    background-size: cover;
+    background-position: center;
+}
+
+.full-height {
+    height: 100%;
+}
+
+.action-button {
+    width: 200px;
+    margin: 0 auto;
+}
+
+.landing-overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 40px;
+    border-radius: 10px;
+}
+
+.main-heading {
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.subheading, .description {
+    color: #e0e0e0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    padding: 1rem;
+    border: dashed;
+    position: relative;
+}
+
+.standard-fields {
+    max-width: 300px;
+    margin-top: 2rem;
+    margin-left: auto;
+}
+
+.popover {
+    overflow-y:auto; 
+    height:200px; 
+    margin:auto;
+    border:groove;
 }

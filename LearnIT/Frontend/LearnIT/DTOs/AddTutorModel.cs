@@ -1,20 +1,20 @@
-﻿using LearnIT.Domain.Entities;
+﻿using Shared;
 
-namespace LearnIT.Application.Models
+namespace LearnIT.DTOs
 {
     public class AddTutorModel
     {
         public int UserId { get; set; }
 
-        public List<string> Skills { get; set; } = [];
+        public IList<string> Skills { get; set; } = [];
 
         public int? Rating { get; set; }
 
         public int? WagePerHour { get; set; }
 
-        public string? JobTitle { get; set; } = null!;
+        public string? JobTitle { get; set; }
 
-        public string? SummaryOfQualification { get; set; } = null!;
+        public string? SummaryOfQualification { get; set; }
 
         public string? GitHubUrl { get; set; }
 

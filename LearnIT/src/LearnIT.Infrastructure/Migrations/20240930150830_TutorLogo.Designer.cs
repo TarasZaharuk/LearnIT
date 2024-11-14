@@ -27,17 +27,17 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Gender", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TutorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("TutorId");
 
                     b.ToTable("Genders");
 
@@ -56,28 +56,28 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Skill", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TutorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
 
                     b.Property<string>("SkillName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("TutorId");
 
                     b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TutorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
 
                     b.Property<string>("GitHubUrl")
                         .HasColumnType("nvarchar(max)");
@@ -102,7 +102,7 @@ namespace LearnIT.Infrastructure.Migrations
                     b.Property<int>("WagePerHour")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("TutorId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -112,11 +112,11 @@ namespace LearnIT.Infrastructure.Migrations
 
             modelBuilder.Entity("LearnIT.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TutorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TutorId"));
 
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date");
@@ -132,7 +132,7 @@ namespace LearnIT.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("TutorId");
 
                     b.HasIndex("GenderId");
 

@@ -1,0 +1,237 @@
+﻿@page "/tutor/registration/{TutorId:int}"
+@inject NavigationManager NavigationManeger
+@inject HttpClient httpClient
+@inject IJSRuntime JsRuntime
+@inject ISnackbar Snackbar
+@using DTOs
+@using LearnIT.Components
+@using MudBlazor
+
+<br>
+<MudStack>
+    <MudStack Style="border:dashed" Row="true">
+        <MudStack Spacing="0">
+            <MudImage Width="150" Height="150" Src="@(_logoBase64 == null ? "DefultTutorLogo.jpg" : _logoBase64)" />
+            <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="OnLogoChanged" MaximumFileCount="1">
+                <ActivatorContent>
+                    <MudButton StartIcon="@Icons.Material.Filled.AddAPhoto">Change logo</MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+        </MudStack>
+        <MudTextField @bind-Value="SummaryOfQualification" Label="Summary of Qualification" Variant="Variant.Outlined" Lines="6" Required="true" />
+    </MudStack>
+    <MudStack Row="true">
+        <MudGrid Class="form-container">
+            <MudTextField @bind-Value="WagePerHour" Label="Wage per Hour" Variant="Variant.Outlined" Required="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+
+            <MudTextField @bind-Value="JobTitle" Label="Job Title" Variant="Variant.Outlined" Required="true" />
+
+            <MudTextField @bind-Value="GitHubUrl" Label="GitHub URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.GitHub" HelperText="Optional" />
+
+            <MudTextField @bind-Value="LinkedInUrl" Label="LinkedIn URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.LinkedIn" HelperText="Optional" />
+        </MudGrid>
+
+        <MudStack Style="border:dashed; min-width:40%">
+            <MudStack Style="margin:17px" Spacing="0">
+
+                <MudTextField T="string" Immediate="true" 
+                                         Label="Add Skill" 
+                                         Variant="Variant.Outlined"
+                                         Adornment="Adornment.End" 
+                                         TextChanged="OnSkillTextChanged" 
+                                         @bind-Value="_skillName" 
+                                         OnAdornmentClick="(e) => AddSkill(_skillName)" 
+                                         AdornmentIcon="@Icons.Material.Filled.Add" 
+                                         AdornmentColor="Color.Secondary">
+                </MudTextField>
+
+                @if (_skillsListExpanded && _filteredSkills != null && _filteredSkills.Any())
+                {
+                    <MudPopover AnchorOrigin="Origin.BottomLeft" DropShadow="false" Open="_skillsListExpanded" Class="popover">
+                        <MudList SelectedValuesChanged="SelectedSkillsChanged" SelectedValues="_selectedSkillsReadonly" CheckedIcon="@Icons.Material.Outlined.CheckBox" SelectionMode="SelectionMode.MultiSelection" T="string">
+                                @foreach (string skill in _filteredSkills)
+                                {
+                                    <MudListItem T="string" Value="skill">@skill</MudListItem>
+                                }
+                        </MudList>
+                    </MudPopover>
+                }
+            </MudStack>
+            <MudSpacer/>
+            <MudStack Wrap="Wrap.Wrap" Row="true" Spacing="0" Style="overflow-y:auto;">
+                @if (_selectedskills != null && _selectedskills.Any())
+                {
+                    @foreach (string skill in _selectedskills)
+                    {
+                        <MudChip T="string" Color="Color.Info" Label="true" OnClose="(e) => RemoveSkill(e.Value!)" Value="skill">@skill</MudChip>
+                    }
+                }
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudStack>
+<br>
+<MudButton FullWidth="true" OnClick="OnSaveChangesClick" Disabled="@(string.IsNullOrWhiteSpace(JobTitle) || string.IsNullOrWhiteSpace(SummaryOfQualification))" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">
+    Save Changes
+</MudButton>
+
+<script>
+    window.registerOutsideClickListener = (dotNetHelper) => {
+        document.addEventListener("click", (event) => {
+            const popover = document.querySelector(".popover");
+            if (popover && !popover.contains(event.target)) {
+                dotNetHelper.invokeMethodAsync("ClosePopover");
+            }
+        });
+    };
+</script>
+
+@code {
+    [Parameter]
+    public int TutorId { get; set; }
+
+    private IList<Skill>? _skills;
+
+    private IList<string>? _filteredSkills;
+
+    private IList<string> _selectedskills = [];
+
+    private IReadOnlyCollection<string> _selectedSkillsReadonly = null!;
+
+    private int WagePerHour { get; set; }
+
+    private string JobTitle { get; set; } = null!;
+
+    private string SummaryOfQualification { get; set; } = null!;
+
+    private string? GitHubUrl { get; set; }
+
+    private string? LinkedInUrl { get; set; }
+
+    private string _logoBase64 = null!;
+
+    private byte[] _logo = null!;
+
+    private bool _skillsListExpanded;
+
+    private string _skillName = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitSkills();
+        await FillTutorData();
+        if(_skills != null)
+            _filteredSkills = _skills.Select(s => s.SkillName).ToList();
+    }
+
+    private async Task InitSkills()
+    {
+        _skills = await httpClient.GetFromJsonAsync<List<Skill>>("/skills");
+    }
+
+    private async Task OnLogoChanged(IBrowserFile file)
+    {
+        using (Stream stream = file.OpenReadStream())
+        {
+            _logo = new byte[file.Size];
+            await stream.ReadAsync(_logo);
+            _logoBase64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(_logo)}";
+        }
+    }
+
+    private void AddSkill(string? skill)
+    {
+        if (!string.IsNullOrWhiteSpace(skill))
+            _selectedskills.Add(skill);
+    }
+
+    private void RemoveSkill(string skill)
+    {
+        _selectedskills.Remove(skill);
+    }
+
+    private void ShowSkillsList()
+    {
+        _skillsListExpanded = true;
+    }
+
+    private void HideSkillsList()
+    {
+        _skillsListExpanded = false;
+    }
+
+    private void OnSkillTextChanged(string skillName)
+    {
+        _filteredSkills = FilterSkillsByName(skillName);
+        ShowSkillsList();
+    }
+
+    private IList<string>? FilterSkillsByName(string skillName)
+    {
+        if (_skills == null)
+            return null;
+        return _skills.Where(s => s.SkillName.Contains(skillName)).Select(s => s.SkillName).ToList();
+    }
+
+    private void SelectedSkillsChanged(IReadOnlyCollection<string> skills)
+    {
+        _selectedskills = skills.ToList();
+    }
+
+    private async Task OnSaveChangesClick()
+    {
+        UpdateTutorGeneralInfoModel updatedTutor = GetUpdatedTutor();
+        HttpResponseMessage? updateGeneralInfoResponse = await httpClient.PutAsJsonAsync<UpdateTutorGeneralInfoModel>("/tutors", updatedTutor);
+        HttpResponseMessage? updateLogoResponse = await httpClient.PostAsJsonAsync<byte[]>($"/tutors/{TutorId}/logo", _logo);
+        HttpResponseMessage? updateSkillsResponse = await httpClient.PostAsJsonAsync<AddTutorSkillsModel>($"/tutor/skills", new AddTutorSkillsModel{TutorId = TutorId, Skills = _selectedskills});
+        bool isTutorUpdated = updateGeneralInfoResponse.IsSuccessStatusCode && updateSkillsResponse.IsSuccessStatusCode;
+        if (isTutorUpdated)
+            Snackbar.Add("Your profile updated", Severity.Success);
+        else Snackbar.Add("Some errors occurred", Severity.Warning);
+    }
+
+    private UpdateTutorGeneralInfoModel GetUpdatedTutor()
+    {
+        UpdateTutorGeneralInfoModel updateTutor = new UpdateTutorGeneralInfoModel
+        {
+            TutorId = TutorId,
+            JobTitle = JobTitle,
+            SummaryOfQualification = SummaryOfQualification,
+            WagePerHour = WagePerHour,
+            GitHubUrl = GitHubUrl,
+            LinkedInUrl = LinkedInUrl
+        };
+
+        return updateTutor;
+    }
+
+    private async Task FillTutorData()
+    {
+        TutorDTO? tutor = await httpClient.GetFromJsonAsync<TutorDTO>($"/tutors/{TutorId}");
+        if (tutor == null)
+            return;
+
+        _selectedskills = tutor.Skills.Select(s => s.SkillName).ToList();
+        _logoBase64 = tutor.LogoUrl;
+        JobTitle = tutor.JobTitle;
+        SummaryOfQualification = tutor.SummaryOfQualification;
+        WagePerHour = tutor.WagePerHour;
+        GitHubUrl = tutor.GitHubUrl;
+        LinkedInUrl = tutor.LinkedInUrl;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("registerOutsideClickListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void ClosePopover()
+    {
+        _skillsListExpanded = false;
+        StateHasChanged();
+    }
+}

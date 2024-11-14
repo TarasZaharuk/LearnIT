@@ -16,7 +16,7 @@ namespace LearnIT.Infrastructure.Persistence
 
         public DbSet<Gender> Genders { get; set; }
 
-        public DbSet<Skill> Skills { get; set; }
+        public DbSet<GeneralSkill> GeneralSkills { get; set; }
 
         public DbSet<Tutor> Tutors { get; set; }
 

@@ -4,7 +4,7 @@ namespace LearnIT.Application.Interfaces.Repositories
 {
     public interface IUsersRepository
     {
-        Task AddAsync(User user);
+        Task<int> AddAsync(User user);
 
         Task AddAsync(List<User> users);
 

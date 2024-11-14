@@ -11,13 +11,13 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
         {
             _learnITDBcontext = learnITDBContext;
         }
-        public async Task AddAsync(Skill skill)
+        public async Task AddAsync(GeneralSkill skill)
         {
             await _learnITDBcontext.AddAsync(skill);
             await _learnITDBcontext.SaveChangesAsync();
         }
 
-        public async Task AddAsync(List<Skill> skills)
+        public async Task AddAsync(List<GeneralSkill> skills)
         {
             await _learnITDBcontext.AddRangeAsync(skills);
             await _learnITDBcontext.SaveChangesAsync();
@@ -25,22 +25,22 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
 
         public async Task DeleteByIdAsync(int id)
         {
-            Skill? skill = await _learnITDBcontext.Skills.FindAsync(id);
+            GeneralSkill? skill = await _learnITDBcontext.GeneralSkills.FindAsync(id);
             if (skill == null)
                 return;
 
-            _learnITDBcontext.Skills.Remove(skill);
+            _learnITDBcontext.GeneralSkills.Remove(skill);
             await _learnITDBcontext.SaveChangesAsync();
         }
 
-        public async Task<List<Skill>> GetAllAsync()
+        public async Task<List<GeneralSkill>> GetAllAsync()
         {
-            return await _learnITDBcontext.Skills.ToListAsync();
+            return await _learnITDBcontext.GeneralSkills.ToListAsync();
         }
 
-        public async Task<List<Skill>> GetByIdsAsync(List<int> ids)
+        public async Task<List<GeneralSkill>> GetByIdsAsync(List<int> ids)
         {
-            return await _learnITDBcontext.Skills.Where(skill => ids.Contains(skill.Id)).ToListAsync();
+            return await _learnITDBcontext.GeneralSkills.Where(skill => ids.Contains(skill.Id)).ToListAsync();
         }
     }
 }

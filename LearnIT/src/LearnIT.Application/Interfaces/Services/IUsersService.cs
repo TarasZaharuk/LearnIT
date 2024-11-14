@@ -1,6 +1,5 @@
 ﻿using LearnIT.Application.DTOs;
-using LearnIT.Application.Models;
-using LearnIT.Domain.Entities;
+using Shared;
 
 namespace LearnIT.Application.Interfaces.Services
 {
@@ -8,7 +7,7 @@ namespace LearnIT.Application.Interfaces.Services
     {
         Task<List<UserDTO>> GetAsync();
 
-        Task AddAsync(AddUserModel user);
+        Task<int> AddAsync(AddUserModel user);
 
         Task DeleteByIdAsync(int id);
     }

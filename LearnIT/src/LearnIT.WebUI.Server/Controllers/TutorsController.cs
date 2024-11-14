@@ -23,6 +23,12 @@ namespace LearnIT.WebUI.Server.Controllers
             return await _tutorsService.GetAsync(tutorsFilter);
         }
 
+        [HttpGet("/tutors/{id}")]
+        public async Task<TutorDTO?> GetTutorById(int id)
+        {
+            return await _tutorsService.GetByIdAsync(id);
+        }
+
         [HttpGet("/tutors/{id}/logo")]
         public async Task<IActionResult> GetTutorLogoAsync(int id)
         {
@@ -31,30 +37,29 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpPost("/tutor")]
-        public async Task AddTutor(AddTutorModel addTutor)
+        public async Task<IActionResult> AddTutor(AddTutorModel addTutor)
         {
-            await _tutorsService.AddAsync(addTutor);
+            int tutorId = await _tutorsService.AddAsync(addTutor);
+            return Ok(tutorId);
+        }
+
+        [HttpPut("/tutors")]
+        public async Task<IActionResult> UpdateTutorGeneralInfo(UpdateTutorGeneralInfoModel updatedTutor)
+        {
+            await _tutorsService.UpdateGeneralInfoAsync(updatedTutor);
+            return Ok();
         }
 
         [HttpPost("/tutor/skills")]
         public async Task AddSkills(AddTutorSkillsModel addTutorSkills)
         {
-            await _tutorsService.AddSkillsAsync(addTutorSkills);
+            await _tutorsService.UpdateSkillsAsync(addTutorSkills);
         }
 
         [HttpPost("/tutors/{id}/logo")]
-        public async Task<IActionResult> AddLogo(IFormFile formFile,int id)
-        {
-            byte[] logo = [];
-            if (formFile.ContentType != "image/jpeg")
-                return BadRequest(new BadImageFormatException());
-
-            using var stream = new MemoryStream();
-            await formFile.CopyToAsync(stream);
-            logo = stream.ToArray();
-            
-
-            await _tutorsService.SetLogoAsync(id, logo);
+        public async Task<IActionResult> AddLogo(int id, byte[] file)
+        {            
+            await _tutorsService.SetLogoAsync(id, file);
             return Ok();
         }
 

@@ -1,0 +1,111 @@
+﻿@using MudBlazor;
+@using Components;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using DTOs;
+@using Shared;
+<MudGrid>
+    <MudItem xs="12" sm="22">
+        <MudForm Style="margin-left:10px; margin-right:10px" @bind-IsValid="@_success">
+            <MudText Align="Align.Center" Typo="Typo.h6" Style="font-weight:bold">Sign up</MudText>
+            <MudTextField T="string" @bind-Value="_firstName" Label="First Name" Required="true" RequiredError="First name is required!" />
+            <MudTextField T="string" @bind-Value="_lastName" Label="Last Name" Required="true" RequiredError="Last name is required!" />
+            <MudTextField T="string" @bind-Value="_email" Label="Email" Required="true" RequiredError="Email is required!"
+                          Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
+            <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @bind-Value="_password"
+                          Validation="@(new Func<string, string?>(GetPasswordValidationError))"
+                          InputType="InputType.Password"
+                          Required="true"
+                          RequiredError="Password is required!" />
+            <MudTextField T="string"
+                          Label="Password" HelperText="Repeat the password" InputType="InputType.Password"
+                          Validation="@(new Func<string, string?>(GetPasswordMatchError))" />
+            <MudDatePicker @bind-Date="_birthDate" MaxDate="DateTime.Now.AddYears(-MinUserAge)" PickerVariant="PickerVariant.Dialog" Required="true" RequiredError="Birth date is required!" Label="@DateFormat" Editable="true" Mask="@(new DateMask(DateFormat))" DateFormat="@DateFormat" Placeholder="Set your birth date" />
+
+
+            <div class="d-flex">
+                <MudRadioGroup @bind-Value="_selectedGender" T="Gender" Required="true" RequiredError="Gender is required!">
+                    @foreach (Gender gender in Genders)
+                    {
+                        <MudRadio Value="gender">@gender.Name</MudRadio>
+                    }
+                </MudRadioGroup>
+            </div>
+            <div class="d-flex align-center justify-space-between">
+                <MudCheckBox T="bool" Required="true" RequiredError="You must agree" Label="I agree with agreement" />
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" OnClick="OnRegistrationClick" Color="Color.Primary" Disabled="@(!_success)" Class="ml-auto">Register</MudButton>
+            </div>
+        </MudForm>
+    </MudItem>
+</MudGrid>
+@code {
+    [Parameter]
+    public IList<Gender> Genders { get; set; } = null!;
+    [Parameter]
+    public EventCallback<AddUserModel> OnUserRegistrationCompleted { get; set; }
+
+    private const string DateFormat = "MM/dd/yyyy";
+    private const int MinUserAge = 17;
+
+    private Gender _selectedGender = null!;
+    private string? _firstName;
+    private string? _lastName;
+    private string? _email;
+    private string? _password;
+    private DateTime? _birthDate;
+
+    private bool _success;
+
+    public SignUpForm()
+    {
+        _birthDate = DateTime.Now.AddYears(-MinUserAge);
+    }
+
+    private string? GetPasswordValidationError(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            return "Password is required!";
+        if (password.Length < 8)
+            return "Password must be at least of length 8";
+        if (!Regex.IsMatch(password, @"[A-Z]"))
+            return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(password, @"[a-z]"))
+            return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(password, @"[0-9]"))
+            return "Password must contain at least one digit";
+        return null;
+    }
+
+    private string? GetPasswordMatchError(string password)
+    {
+        if (_password != password)
+            return "Passwords don't match";
+        return null;
+    }
+
+    private async Task OnRegistrationClick()
+    {
+        AddUserModel? user = GetUserRegistrationModel();
+        if(user != null)
+        await OnUserRegistrationCompleted.InvokeAsync(user);
+    }
+
+    private AddUserModel? GetUserRegistrationModel()
+    {
+        if (_birthDate == null || string.IsNullOrWhiteSpace(_firstName) || string.IsNullOrWhiteSpace(_lastName) || string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password))
+            return null;
+
+        AddUserModel userRegistrationModel = new AddUserModel
+        {
+                FirstName = _firstName,
+                LastName = _lastName,
+                BirthDate = DateOnly.FromDateTime(_birthDate.Value),
+                GenderId = _selectedGender.Id,
+                Email = _email,
+                Password = _password
+        };
+
+        return userRegistrationModel;
+    }
+}

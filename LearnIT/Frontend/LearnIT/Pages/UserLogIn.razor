@@ -1,0 +1,22 @@
+﻿@page "/user/login"
+@layout LandingLayout
+@inject NavigationManager NavigationManeger
+@using DTOs
+@using LearnIT.Components
+@inherits ComponentBase
+<MudPaper Style="display:flex; vertical-align:middle; justify-content:center; align-items:center;" Elevation="0" Width="40%">
+    <MudStack Spacing="3" Justify="Justify.Center" Style="background-color:white; width:100%">
+                <MudTextField @bind-Value="Email"></MudTextField>
+                <MudTextField @bind-Value="Password"></MudTextField>
+                <MudButton Variant="Variant.Outlined" OnClick="OnLogInClick" Color="Color.Secondary" Class="action-button">Log In</MudButton>
+    </MudStack>
+</MudPaper>
+@code{
+    private string Email { get; set; } = null!;
+    private string Password { get; set; } = null!;
+
+    private void OnLogInClick()
+    {
+        NavigationManeger.NavigateTo("/tutors");
+    }
+}
