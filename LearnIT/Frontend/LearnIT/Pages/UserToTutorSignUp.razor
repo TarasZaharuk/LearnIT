@@ -47,7 +47,7 @@
     {
         AddTutorModel addedTutor = new AddTutorModel{UserId = userId};
         HttpResponseMessage? response = await HttpClient.PostAsJsonAsync<AddTutorModel>("/tutor", addedTutor);
-        if (response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
             throw new Exception("Tutor is not added");
 
         int tutorId = await response.Content.ReadFromJsonAsync<int>();

@@ -12,9 +12,9 @@ namespace LearnIT.DTOs
 
         public int? WagePerHour { get; set; }
 
-        public string? JobTitle { get; set; } = null!;
+        public string? JobTitle { get; set; }
 
-        public string? SummaryOfQualification { get; set; } = null!;
+        public string? SummaryOfQualification { get; set; }
 
         public string? GitHubUrl { get; set; }
 

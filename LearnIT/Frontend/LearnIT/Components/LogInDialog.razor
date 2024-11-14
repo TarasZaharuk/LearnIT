@@ -14,7 +14,7 @@
                 </MudAvatar>
             </MudItem>
             <MudItem xs="12" sm="22">
-                <MudForm @bind-IsValid="@success">                
+                <MudForm @bind-IsValid="@_success">                
                     <MudTextField T="string" @bind-Value="_email" Label="Email" Required="true" RequiredError="Email is required!"
                                   Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
                     <MudTextField T="string" Label="Password"
@@ -28,7 +28,7 @@
                     <MudStack Justify="Justify.FlexStart" Row="true">
                         <MudButton Variant="Variant.Filled" OnClick="OnCancelClick" Color="Color.Primary" Class="ml-auto">Cancel</MudButton>
                         <MudSpacer/>
-                        <MudButton Variant="Variant.Filled" OnClick="OnLogInClick" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto">Log In</MudButton>
+                        <MudButton Variant="Variant.Filled" OnClick="OnLogInClick" Color="Color.Primary" Disabled="@(!_success)" Class="ml-auto">Log In</MudButton>
                     </MudStack>
                 </MudForm>
             </MudItem>
@@ -39,7 +39,7 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = null!;
     private string _email = null!;
-    private bool success;
+    private bool _success;
     string _password = null!;
     private bool _rememberMe;
 

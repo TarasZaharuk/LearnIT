@@ -16,16 +16,19 @@ namespace LearnIT.Application.Services
         private readonly ITutorsRepository _tutorsRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly string _serverAddress;
 
         public TutorsService(ITutorsRepository tutorsRepository, IMapper mapper, IConfiguration configuration)
         {
             _tutorsRepository = tutorsRepository;
             _mapper = mapper;
             _configuration = configuration;
+            _serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
         }
         public async Task<int> AddAsync(AddTutorModel addedTutor)
         {
             Tutor tutor = _mapper.Map<AddTutorModel, Tutor>(addedTutor);
+            tutor.Skills = addedTutor.Skills.Select(s => new TutorSkill(s)).ToList();
             tutor.EntityState = GetEntityState(tutor);
             int tutorId = await _tutorsRepository.AddAsync(tutor);
             return tutorId;
@@ -36,7 +39,7 @@ namespace LearnIT.Application.Services
             var tutor = await _tutorsRepository.GetByIdAsync(addTutorSkills.TutorId);
             if (tutor == null)
                 return;
-            tutor.Skills = addTutorSkills.Skills.Select(s => new TutorSkill { SkillName = s }).ToList();
+            tutor.Skills = addTutorSkills.Skills.Select(s => new TutorSkill(s)).ToList();
             await _tutorsRepository.UpdateAsync(tutor);
         }
 
@@ -51,11 +54,10 @@ namespace LearnIT.Application.Services
         }
         public async Task<List<TutorDTO>> GetAsync(TutorsFilterModel tutorsFilter)
         {
-            List<Tutor> tutors = await _tutorsRepository.GetActiveAsync(tutorsFilter);
+            List<Tutor> tutors = await _tutorsRepository.GetAsync(tutorsFilter, EntityState.Active);
             List<TutorDTO> tutorDTOs = _mapper.Map<List<Tutor>, List<TutorDTO>>(tutors);
-            string serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
             foreach (var tutor in tutorDTOs)
-                tutor.LogoUrl = $"{serverAddress}/tutors/{tutor.Id}/logo";
+                tutor.LogoUrl = $"{_serverAddress}/tutors/{tutor.Id}/logo";
 
             return tutorDTOs;
         }
@@ -73,18 +75,24 @@ namespace LearnIT.Application.Services
             if (tutor.Logo != null)
                 return tutor.Logo;
 
+            return await GetDefultTutorLogo();
+        }
+
+        private async Task<byte[]> GetDefultTutorLogo()
+        {
             string? defultTutorLogoName = _configuration["DefultTutorLogoName"];
             if (string.IsNullOrEmpty(defultTutorLogoName))
                 throw new ConfigurationErrorsException("DefultTutorLogoName is null or empty");
+
             string? basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (basePath == null)
                 throw new Exception("ExecutingAssembly location is null");
-            string? defultTutorLogoPath = Directory.GetFiles(basePath,defultTutorLogoName,SearchOption.AllDirectories).FirstOrDefault();
+
+            string? defultTutorLogoPath = Directory.GetFiles(basePath, defultTutorLogoName, SearchOption.AllDirectories).FirstOrDefault();
             if (string.IsNullOrEmpty(defultTutorLogoPath))
                 throw new FileNotFoundException("defultTutorLogo not found");
 
             byte[] defultTutorLogo = await File.ReadAllBytesAsync(defultTutorLogoPath);
-
             return defultTutorLogo;
         }
 
@@ -119,8 +127,7 @@ namespace LearnIT.Application.Services
             if (tutor == null)
                 return null;
             TutorDTO tutorDTO = _mapper.Map<Tutor,TutorDTO>(tutor);
-            string serverAddress = _configuration["BaseServerAddress"] ?? throw new ConfigurationErrorsException("BaseServerAddress is null");
-            tutorDTO.LogoUrl = $"{serverAddress}/tutors/{tutor.Id}/logo";
+            tutorDTO.LogoUrl = $"{_serverAddress}/tutors/{tutor.Id}/logo";
             return tutorDTO;
         }
     }

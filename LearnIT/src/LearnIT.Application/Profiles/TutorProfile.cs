@@ -10,8 +10,6 @@ namespace LearnIT.Application.Profiles
     {
         public TutorProfile()
         {
-            CreateMap<string, TutorSkill>()
-                .ForMember(ts => ts.SkillName, cfg => cfg.MapFrom(s => s));
             CreateMap<TutorSkill, SkillDTO>()
                 .ForMember(sd => sd.SkillName, cfg => cfg.MapFrom(s => s.SkillName))
                 .ForMember(sd => sd.Id, cfg => cfg.MapFrom(s => s.Id));

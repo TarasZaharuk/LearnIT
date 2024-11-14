@@ -2,6 +2,7 @@
 using LearnIT.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared;
+using EntityState = LearnIT.Domain.Entities.EntityState;
 
 namespace LearnIT.Infrastructure.Persistence.Repositories
 {
@@ -50,13 +51,13 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
                .ToListAsync();
         }
 
-        public async Task<List<Tutor>> GetActiveAsync(TutorsFilterModel filter)
+        public async Task<List<Tutor>> GetAsync(TutorsFilterModel filter, EntityState entityState)
         {
             IQueryable<Tutor> filteredTutors = _learnITDBContext.Tutors
                 .Include(t => t.User)
                 .Include(t => t.User.Gender)
                 .Include(t => t.Skills)
-                .Where(t => t.EntityState == Domain.Entities.EntityState.Active);
+                .Where(t => t.EntityState == entityState);
             if (filter == null)
                 return await filteredTutors.ToListAsync();
 

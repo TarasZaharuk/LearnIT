@@ -90,9 +90,9 @@
     [Parameter]
     public int TutorId { get; set; }
 
-    private IList<Skill>? _skills = null!;
+    private IList<Skill>? _skills;
 
-    private IList<string>? _filteredSkills = null!;
+    private IList<string>? _filteredSkills;
 
     private IList<string> _selectedskills = [];
 
@@ -104,9 +104,9 @@
 
     private string SummaryOfQualification { get; set; } = null!;
 
-    private string? GitHubUrl { get; set; } = null!;
+    private string? GitHubUrl { get; set; }
 
-    private string? LinkedInUrl { get; set; } = null!;
+    private string? LinkedInUrl { get; set; }
 
     private string _logoBase64 = null!;
 
@@ -187,7 +187,7 @@
         bool isTutorUpdated = updateGeneralInfoResponse.IsSuccessStatusCode && updateSkillsResponse.IsSuccessStatusCode;
         if (isTutorUpdated)
             Snackbar.Add("Your profile updated", Severity.Success);
-        else Snackbar.Add("Profile didn't updated", Severity.Warning);
+        else Snackbar.Add("Some errors occurred", Severity.Warning);
     }
 
     private UpdateTutorGeneralInfoModel GetUpdatedTutor()

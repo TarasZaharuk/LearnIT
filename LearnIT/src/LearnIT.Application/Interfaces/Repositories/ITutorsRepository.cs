@@ -15,7 +15,7 @@ namespace LearnIT.Application.Interfaces.Repositories
 
         Task<List<Tutor>> GetAllAsync();
 
-        Task<List<Tutor>> GetActiveAsync(TutorsFilterModel filter);
+        Task<List<Tutor>> GetAsync(TutorsFilterModel filter, EntityState entityState);
 
         Task<Tutor?> GetByIdAsync(int id);
 

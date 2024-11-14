@@ -15,7 +15,7 @@ else
     <ListContainer>
         <FilterDrawerContent>
             <FilterDrawer DrawerVariant="@_drawerVariant" @bind-Open="_filterDrawerOpen">
-                <WageSlider @ref="_wageSlider" MaxWage="_maxWage" MinWage="_minWage" LowerWageChanged="OnFromWageChanged" UpperWageChanged="OnToWageChanged"/>
+                <WageSlider @ref="_wageSlider" MaxWage="MaxWage" MinWage="MinWage" LowerWageChanged="OnFromWageChanged" UpperWageChanged="OnToWageChanged"/>
                 @if (_skills != null)
                 {
                     <MudText Style="left:5%;">Skills</MudText>
@@ -72,17 +72,18 @@ else
 }
 
 @code {
-    private IList<TutorDTO>? _tutors = null!;
+    private const double MinWage = 40;
+    private const double MaxWage = 100;
+
+    private IList<TutorDTO>? _tutors;
     private bool _filterDrawerOpen = false;
     private bool _clearFilters = false;
     private string _searchedTutors = null!;
-    private double _minWage = 40;
-    private double _maxWage = 100;
     private double? _lowerWage = null!;
     private double? _upperWage = null!;
     public int BrowserWindowWidth { get; set; }
     public int BrowserWindowHeight { get; set; }
-    private IList<Skill>? _skills = null!;
+    private IList<Skill>? _skills;
     private IEnumerable<Skill> _selectedSkills { get; set; } = null!;
     private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
 
