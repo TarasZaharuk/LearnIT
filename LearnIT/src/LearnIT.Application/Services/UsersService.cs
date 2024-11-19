@@ -7,8 +7,9 @@ using Shared;
 
 namespace LearnIT.Application.Services
 {
-    public class UsersService(IUsersRepository usersRepository, IMapper mapper) : IUsersService
+    public class UsersService(IUsersRepository usersRepository, ITutorsRepository tutorsRepository, IMapper mapper) : IUsersService
     {
+        private readonly ITutorsRepository _tutorsRepository = tutorsRepository;
         private readonly IUsersRepository _usersRepository = usersRepository;
         private readonly IMapper _mapper = mapper;
 
@@ -29,6 +30,38 @@ namespace LearnIT.Application.Services
         public async Task DeleteByIdAsync(int id)
         {
             await _usersRepository.DeleteByIdAsync(id);
+        }
+
+        public async Task<UserDTO?> GetUserByLoginAsync(UserLoginModel userLoginModel)
+        {
+            User? user = await _usersRepository.GetByEmailAsync(userLoginModel.Email);
+            if(user != null && user.Password == userLoginModel.Password)
+            {
+                UserDTO userDTO = _mapper.Map<User, UserDTO>(user);
+                Tutor? tutor = await _tutorsRepository.GetByUserIdAsync(user.Id);
+                if(tutor != null)
+                    userDTO.TutorId = tutor.Id;
+
+                return userDTO;
+            }
+
+            return null;
+        }
+
+        public async Task<UserDTO?> GetByIdAsync(int id)
+        {
+            User? user = await _usersRepository.GetByIdAsync(id);
+            if (user != null)
+            {
+                UserDTO userDTO = _mapper.Map<User, UserDTO>(user);
+                Tutor? tutor = await _tutorsRepository.GetByUserIdAsync(user.Id);
+                if (tutor != null)
+                    userDTO.TutorId = tutor.Id;
+
+                return userDTO;
+            }
+
+            return null;
         }
     }
 }

@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Services;
 using Shared;
+using Microsoft.AspNetCore.Authorization;
 namespace LearnIT.WebUI.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private IUsersService _usersService;
@@ -19,6 +21,12 @@ namespace LearnIT.WebUI.Server.Controllers
         public async Task<List<UserDTO>> GetUsersAsync()
         {
             return await _usersService.GetAsync();
+        }
+
+        [HttpGet("/users/{id}")]
+        public async Task<UserDTO?> GetUserByIdAsync(int id)
+        {
+            return await _usersService.GetByIdAsync(id);
         }
 
         [HttpPost("/user")]

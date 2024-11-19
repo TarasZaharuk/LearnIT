@@ -38,6 +38,9 @@
 @code {
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter]
+    public EventCallback<UserLoginModel> UserLoginModel { get; set; }
+
     private string _email = null!;
     private bool _success;
     string _password = null!;
@@ -45,7 +48,8 @@
 
     private void OnLogInClick()
     {
-    
+        UserLoginModel userLoginModel = new UserLoginModel { Email = _email, Password = _password };
+        MudDialog.Close(userLoginModel);
     }
 
     private void OnCancelClick()
