@@ -9,6 +9,8 @@
 @layout LandingLayout
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject AuthenticatedHttpClient AuthenticatedHttpClient
+@inject UserAuthenticationStateProvider UserAuthenticationStateProvider
 @if (_genders != null)
 {
     <MudContainer MaxWidth="MaxWidth.False">
@@ -37,20 +39,20 @@
         HttpResponseMessage? response = await HttpClient.PostAsJsonAsync("/user", addedUser);
         if (response.IsSuccessStatusCode)
         {
-            int userId = await response.Content.ReadFromJsonAsync<int>();
-            int tutorId = await RegistrateTutor(userId);
-            NavigationManager.NavigateTo($"/tutor/registration/{tutorId}");
+            string token = await response.Content.ReadAsStringAsync();
+            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
+            int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+            if (userId.HasValue)
+                await RegistrateTutor(userId.Value);
+            NavigationManager.NavigateTo($"/tutor/registration");
         }
     }
 
-    private async Task<int> RegistrateTutor(int userId)
+    private async Task RegistrateTutor(int userId)
     {
         AddTutorModel addedTutor = new AddTutorModel{UserId = userId};
-        HttpResponseMessage? response = await HttpClient.PostAsJsonAsync<AddTutorModel>("/tutor", addedTutor);
+        HttpResponseMessage? response = await AuthenticatedHttpClient.PostAsync<AddTutorModel>("/tutor", addedTutor);
         if (!response.IsSuccessStatusCode)
             throw new Exception("Tutor is not added");
-
-        int tutorId = await response.Content.ReadFromJsonAsync<int>();
-        return tutorId;
     }
 }

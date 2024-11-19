@@ -81,5 +81,7 @@ namespace LearnIT
             await _localStorageService.RemoveItemAsync("authToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
+
+        public async Task UpdateUserState
     }
 }
