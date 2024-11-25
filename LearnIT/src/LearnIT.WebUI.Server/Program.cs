@@ -5,6 +5,9 @@ using LearnIT.Application.Services;
 using LearnIT.Infrastructure.Persistence;
 using LearnIT.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace LearnIT.WebUI.Server
 {
@@ -25,6 +28,20 @@ namespace LearnIT.WebUI.Server
                            .AllowAnyHeader();
                 }
                 ));
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Issuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                };
+            });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -37,7 +54,11 @@ namespace LearnIT.WebUI.Server
             builder.Services.AddTransient<IGendersRepository, GendersRepository>();
             builder.Services.AddTransient<IUsersService, UsersService>();
             builder.Services.AddTransient<ITutorsService, TutorsService>();
-
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ElevatedRights", policy =>
+                      policy.RequireRole("Admin", "User", "Tutor"));
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -48,6 +69,8 @@ namespace LearnIT.WebUI.Server
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

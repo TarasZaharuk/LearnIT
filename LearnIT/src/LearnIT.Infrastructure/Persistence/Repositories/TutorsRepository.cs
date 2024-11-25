@@ -82,6 +82,15 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
                 .SingleOrDefaultAsync(t => t.Id == id);
         }
 
+        public async Task<Tutor?> GetByUserIdAsync(int userId)
+        {
+            return await _learnITDBContext.Tutors
+                .Include(t => t.User)
+                .Include(t => t.User.Gender)
+                .Include(t => t.Skills)
+                .SingleOrDefaultAsync(t => t.UserId == userId);
+        }
+
         public async Task UpdateAsync(Tutor updatedTutor)
         {
             _learnITDBContext.Tutors.Update(updatedTutor);

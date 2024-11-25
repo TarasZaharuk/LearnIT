@@ -11,5 +11,7 @@
         public string Gender { get; set; } = null!;
 
         public DateOnly BirthDate { get; set; }
+
+        public int? TutorId { get; set; }
     }
 }

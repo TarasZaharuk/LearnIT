@@ -35,6 +35,16 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
             return await _usersDBContext.Users.Include(u => u.Gender).ToListAsync(); 
         }
 
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _usersDBContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            return await _usersDBContext.Users.SingleOrDefaultAsync(u => u.Id == id);
+        }
+
         public async Task<List<User>> GetInDiapazonAsync(int skip, int take)
         {
             return await _usersDBContext.Users.Skip(skip).Take(take).ToListAsync(); 
