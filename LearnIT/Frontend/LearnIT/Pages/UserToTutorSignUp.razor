@@ -34,18 +34,22 @@
     {
         _genders = await HttpClient.GetFromJsonAsync<List<Gender>>("/genders") ?? throw new Exception("genders is null");
     }
+
     private async Task HandleUserRegistrationModel(AddUserModel addedUser)
     {
         HttpResponseMessage? response = await HttpClient.PostAsJsonAsync("/user", addedUser);
-        if (response.IsSuccessStatusCode)
-        {
-            string token = await response.Content.ReadAsStringAsync();
-            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
-            int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
-            if (userId.HasValue)
-                await RegistrateTutor(userId.Value);
-            NavigationManager.NavigateTo($"/tutor/registration");
-        }
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        UserLoginModel userLoginModel = new UserLoginModel {Email = addedUser.Email, Password = addedUser.Password };
+        await Login(userLoginModel);
+
+        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        if (!userId.HasValue)
+            return;
+
+        await RegistrateTutor(userId.Value);
+        NavigationManager.NavigateTo($"/tutor/registration");
     }
 
     private async Task RegistrateTutor(int userId)
@@ -54,5 +58,14 @@
         HttpResponseMessage? response = await AuthenticatedHttpClient.PostAsync<AddTutorModel>("/tutor", addedTutor);
         if (!response.IsSuccessStatusCode)
             throw new Exception("Tutor is not added");
+    }
+
+    private async Task Login(UserLoginModel userLoginModel)
+    {
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UserLoginModel>("/login", userLoginModel);
+
+        string? token = await response.Content.ReadAsStringAsync();
+        if (token != null)
+            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
     }
 }

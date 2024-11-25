@@ -41,32 +41,22 @@ namespace LearnIT
         public async Task<bool> IsUserAuthenticated()
         {
             AuthenticationState authenticationState = await GetAuthenticationStateAsync();
-            if (authenticationState.User.Identity != null && authenticationState.User.Identity.IsAuthenticated)
-                return true;
-            return false;
+            return authenticationState.User.Identity != null && authenticationState.User.Identity.IsAuthenticated;
         }
 
         public async Task<bool> IsUserInRole(string role)
         {
             AuthenticationState authenticationState = await GetAuthenticationStateAsync();
-            bool isUserAuthenticated = await IsUserAuthenticated();
-            if (isUserAuthenticated && authenticationState.User.IsInRole(role))
-                return true;
-            return false;
+            return await IsUserAuthenticated() && authenticationState.User.IsInRole(role);
         }
 
         public async Task<int?> GetAuthenticatedUserIdAsync()
         {
-            int userId;
             AuthenticationState authenticationState = await GetAuthenticationStateAsync();
-            Claim? tutorIdClaim = authenticationState.User.FindFirst("Id");
-            if (tutorIdClaim == null)
-                return null;
-
-            bool isClaimInteger = int.TryParse(tutorIdClaim.Value, out userId);
-            if (isClaimInteger)
+            string? tutorIdClaim = authenticationState.User.FindFirst("Id")?.Value;
+            bool isConvertedSuccessfully = int.TryParse(tutorIdClaim , out int userId);
+            if (isConvertedSuccessfully)
                 return userId;
-
             return null;
         }
 
@@ -81,7 +71,5 @@ namespace LearnIT
             await _localStorageService.RemoveItemAsync("authToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
-
-        public async Task UpdateUserState
     }
 }

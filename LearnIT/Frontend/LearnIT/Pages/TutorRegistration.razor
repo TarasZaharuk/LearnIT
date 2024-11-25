@@ -183,8 +183,7 @@
 
     private IList<string>? FilterSkillsByName(string skillName)
     {
-        if (_skills == null)
-            return null;
+        if (_skills == null) return null;
         return _skills.Where(s => s.SkillName.Contains(skillName)).Select(s => s.SkillName).ToList();
     }
 
@@ -223,8 +222,7 @@
     private async Task FillTutorData()
     {
         TutorDTO? tutor = await AuthenticatedHttpClient.GetAsync<TutorDTO>($"/tutors/{_tutorId}");
-        if (tutor == null)
-            return;
+        if (tutor == null) return;
 
         _selectedskills = tutor.Skills.Select(s => s.SkillName).ToList();
         _logoBase64 = tutor.LogoUrl;
@@ -239,10 +237,8 @@
     {
         int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
         UserDTO? user = await AuthenticatedHttpClient.GetAsync<UserDTO>($"/users/{userId}");
-        if (user == null)
-            return null;
 
-        return user.TutorId;
+        return user?.TutorId;
     }
 
     private string GetLogoBase64String(byte[] logo)

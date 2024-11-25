@@ -90,17 +90,16 @@
 
     private async Task OnLogInClick()
     {
-        if (_isUserAuthenticated)
-            return;
+        if (_isUserAuthenticated) return;
 
         UserLoginModel? userLoginModel;
         IDialogReference dialog = await DialogService.ShowAsync<LogInDialog>();
         DialogResult? dialogResult = await dialog.Result;
-        if (dialogResult == null)
-            return;
+        if (dialogResult == null) return;
+
         userLoginModel = (UserLoginModel)dialogResult.Data!;
-        if (userLoginModel == null)
-            return;
+        if (userLoginModel == null) return;
+
         await LogIn(userLoginModel);
     }
 

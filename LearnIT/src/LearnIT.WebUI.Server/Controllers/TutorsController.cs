@@ -4,8 +4,7 @@ using LearnIT.Application.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Shared;
-using System.Buffers.Text;
-using System;
+
 
 namespace LearnIT.WebUI.Server.Controllers
 {
@@ -38,10 +37,8 @@ namespace LearnIT.WebUI.Server.Controllers
         [HttpGet("/tutors/{id}")]
         public async Task<IActionResult> GetTutorById(int id)
         {
-            if (!IsValidToken())
-                return Unauthorized("Invalid token or missing ID.");
-            if (!IsUserHasAccess(id))
-                return Forbid("You are not authorized to access this tutor's data.");
+            IActionResult? tokenAccessError = GetTokenAccessError(id);
+            if (tokenAccessError != null) return tokenAccessError;
 
             TutorDTO? tutor = await _tutorsService.GetByIdAsync(id);
             return Ok(tutor);
@@ -55,10 +52,13 @@ namespace LearnIT.WebUI.Server.Controllers
             return Ok(tutorId);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Tutor")]
         [HttpPost("/tutors")]
         public async Task<IActionResult> UpdateTutorGeneralInfo(UpdateTutorGeneralInfoModel updatedTutor)
         {
+            IActionResult? tokenAccessError = GetTokenAccessError(updatedTutor.TutorId);
+            if (tokenAccessError != null) return tokenAccessError;
+
             await _tutorsService.UpdateGeneralInfoAsync(updatedTutor);
             return Ok();
         }
@@ -67,13 +67,10 @@ namespace LearnIT.WebUI.Server.Controllers
         [HttpPost("/tutor/skills")]
         public async Task<IActionResult> AddSkills(AddTutorSkillsModel addTutorSkills)
         {
-            if (!IsValidToken())
-                return Unauthorized("Invalid token or missing ID.");
-            if (!IsUserHasAccess(addTutorSkills.TutorId))
-                return Forbid("You are not authorized to access this tutor's data.");
+            IActionResult? tokenAccessError = GetTokenAccessError(addTutorSkills.TutorId);
+            if (tokenAccessError != null) return tokenAccessError;
 
             await _tutorsService.UpdateSkillsAsync(addTutorSkills);
-
             return Ok();
         }
 
@@ -81,10 +78,9 @@ namespace LearnIT.WebUI.Server.Controllers
         [HttpPost("/tutors/{id}/logo")]
         public async Task<IActionResult> AddLogo(int id, byte[] file)
         {
-            if (!IsValidToken())
-                return Unauthorized("Invalid token or missing ID.");
-            if (!IsUserHasAccess(id))
-                return Forbid("You are not authorized to access this tutor's data.");
+            IActionResult? tokenAccessError = GetTokenAccessError(id);
+            if (tokenAccessError != null) return tokenAccessError;
+
             await _tutorsService.SetLogoAsync(id, file);
             return Ok();
         }
@@ -93,12 +89,10 @@ namespace LearnIT.WebUI.Server.Controllers
         [HttpDelete("/tutors/{id}")]
         public async Task<IActionResult> DeleteTutor(int id)
         {
-            if (!IsValidToken())
-                return Unauthorized("Invalid token or missing ID.");
-            if(!IsUserHasAccess(id))
-                return Forbid("You are not authorized to access this tutor's data.");
-            await _tutorsService.DeleteByIdAsync(id);
+            IActionResult? tokenAccessError = GetTokenAccessError(id);
+            if (tokenAccessError != null) return tokenAccessError;
 
+            await _tutorsService.DeleteByIdAsync(id);
             return Ok();
         }
 
@@ -109,20 +103,23 @@ namespace LearnIT.WebUI.Server.Controllers
             await _tutorsService.DeleteAllAsync();
         }
 
-        private bool IsValidToken()
+        private IActionResult? GetTokenAccessError(int id)
         {
-            int? tutorId = GetTokenTutorId();
-            if (tutorId != null)
-                return true;
+            if (!IsTokenHasId()) return Unauthorized("Token has no ID");
+            if (!IsUserHasAccess(id)) return Forbid("You are not authorized to access this tutor's data.");
 
-            return false;
+            return null;
+        }
+
+        private bool IsTokenHasId()
+        {
+            int? tutorId = GetTutorIdFromToken();
+            return tutorId != null;
         }
 
         private bool IsUserHasAccess(int id)
         {
-            if (!IsValidToken())
-                return false;
-            int? tutorId = GetTokenTutorId();
+            int? tutorId = GetTutorIdFromToken();
 
             if (tutorId != null && tutorId == id)
                 return true;
@@ -130,11 +127,11 @@ namespace LearnIT.WebUI.Server.Controllers
             return false;
         }
 
-        private int? GetTokenTutorId()
+        private int? GetTutorIdFromToken()
         {
             string? tutorIdClaim = User.FindFirst("TutorId")?.Value;
 
-            if (!string.IsNullOrEmpty(tutorIdClaim) && int.TryParse(tutorIdClaim, out int tutorId))
+            if (int.TryParse(tutorIdClaim, out int tutorId))
                 return tutorId;
 
             return null;
