@@ -9,10 +9,13 @@ namespace LearnIT.Application.Interfaces.Services
 
         Task<UserDTO?> GetByIdAsync(int id);
 
-        Task<int> AddAsync(AddUserModel user);
+        Task<string> AddAsync(AddUserModel user);
 
         Task DeleteByIdAsync(int id);
 
         Task<UserDTO?> GetUserByLoginAsync(UserLoginModel userLoginModel);
+
+        Task<bool> IsEmailConfirmed(int userId);
+
     }
 }

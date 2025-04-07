@@ -4,14 +4,16 @@ using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
 using Shared;
+using LearnIT.Application.Interfaces.Services.UsersEmailService;
 
 namespace LearnIT.Application.Services
 {
-    public class UsersService(IUsersRepository usersRepository, ITutorsRepository tutorsRepository, IMapper mapper) : IUsersService
+    public class UsersService(IUsersRepository usersRepository, ITutorsRepository tutorsRepository, IMapper mapper, IEmailConfirmationService emailConfirmationService) : IUsersService
     {
         private readonly ITutorsRepository _tutorsRepository = tutorsRepository;
         private readonly IUsersRepository _usersRepository = usersRepository;
         private readonly IMapper _mapper = mapper;
+        private readonly IEmailConfirmationService _emailConfirmationService = emailConfirmationService;
 
         public async Task<List<UserDTO>> GetAsync()
         {
@@ -20,11 +22,20 @@ namespace LearnIT.Application.Services
             return userDtos;
         }
 
-        public async Task<int> AddAsync(AddUserModel addedUser)
+        public async Task<string> AddAsync(AddUserModel addedUser)
         {
+            bool userWithEmaiExist = await IsExistUserWithEmail(addedUser.Email);
+            if (userWithEmaiExist)
+                return "This email is already used";
+
             User user = _mapper.Map<AddUserModel, User>(addedUser);
             int userId = await _usersRepository.AddAsync(user);
-            return userId;
+            //take care about 'failed to send email' case 
+            //move EmailConfirmationService, TokenService, EmailSender to Infrastructure layer
+            //return standardized message 
+            await _emailConfirmationService.SendEmailConfirmationToAsync(userId);
+
+            return "user added";
         }
 
         public async Task DeleteByIdAsync(int id)
@@ -58,6 +69,21 @@ namespace LearnIT.Application.Services
                 userDTO.TutorId = tutor.Id;
 
             return userDTO;
+        }
+
+        public async Task<bool> IsEmailConfirmed(int userId)
+        {
+            User? user = await _usersRepository.GetByIdAsync(userId);
+            if (user == null)
+                return false;
+
+            return user.EmailConfirmed;
+        }
+
+        private async Task<bool> IsExistUserWithEmail(string email)
+        {
+            User? user = await _usersRepository.GetByEmailAsync(email);
+            return user != null;
         }
     }
 }

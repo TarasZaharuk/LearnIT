@@ -2,21 +2,19 @@ using Microsoft.AspNetCore.Mvc;
 using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Services;
 using Shared;
-using Microsoft.AspNetCore.Authorization;
 
 namespace LearnIT.WebUI.Server.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("[controller]")]
-    [Authorize]
     public class UsersController : ControllerBase
     {
-        private IUsersService _usersService;
-
+        private readonly IUsersService _usersService;
         public UsersController(IUsersService usersService)
         {
             _usersService = usersService;
         }
+
 
         [HttpGet("/users")]
         public async Task<List<UserDTO>> GetUsersAsync()
@@ -30,11 +28,18 @@ namespace LearnIT.WebUI.Server.Controllers
             return await _usersService.GetByIdAsync(id);
         }
 
-        [HttpPost("/user")]
-        public async Task<IActionResult> AddUser(AddUserModel user)
+        [HttpGet("/users/{id}email/state")]
+        public async Task<bool> IsEmailConfirmedAsync(int id)
         {
-            int userId = await _usersService.AddAsync(user);
-            return Ok(userId);
+            return await _usersService.IsEmailConfirmed(id);
+        }
+
+        [HttpPost("/user")]
+        public async Task<IActionResult> AddUser(AddUserModel addedUser)
+        {
+            //
+            string messege = await _usersService.AddAsync(addedUser);
+            return Ok(messege);
         }
 
         [HttpDelete("/user/{id}")]

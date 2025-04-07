@@ -6,10 +6,12 @@
 @inject AuthenticatedHttpClient AuthenticatedHttpClient
 @inject UserAuthenticationStateProvider UserAuthenticationStateProvider
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 @using DTOs
 @using LearnIT.Components
 @using Shared;
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
 @using System.Security.Claims
 
 @inherits ComponentBase
@@ -43,6 +45,12 @@
                         <MudButton Variant="Variant.Outlined" Href="/tutor/registration" Color="Color.Secondary" Class="action-button">View Profile</MudButton>
                     </MudItem>
                 }
+                else if (_isUserAuthenticated & _isEmailConfirmed)
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="action-button">Promote to Tutor</MudButton>
+                    </MudItem>
+                }
                 else
                 {
                     <MudItem>
@@ -71,21 +79,28 @@
 @code{
     private bool _isUserAuthenticated;
     private bool _isTutor;
+    private bool _isEmailConfirmed;
+
+    private const string UserRegistrationPageAddress = "/user/registration";
+    private const string TutorsPageAddress = "/tutors";
+
 
     protected override async Task OnInitializedAsync()
     {
         _isUserAuthenticated = await UserAuthenticationStateProvider.IsUserAuthenticated();
+        _isEmailConfirmed = await IsEmailConfirmed();
+
         _isTutor = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
     }
 
     private void OnFindTutorClick()
     {
-        NavigationManeger.NavigateTo("/tutors");
+        NavigationManeger.NavigateTo(TutorsPageAddress);
     }
 
     private void OnBecomeTutorClick()
     {
-        NavigationManeger.NavigateTo("/user/registration");
+        NavigationManeger.NavigateTo(UserRegistrationPageAddress);
     }
 
     private async Task OnLogInClick()
@@ -122,9 +137,19 @@
         if (token != null)
             await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
 
-        if (await UserAuthenticationStateProvider.IsUserInRole("Tutor"))
+        bool isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+        if (isUserInTutorRole)
             NavigationManeger.NavigateTo($"/tutor/registration", true);
-        else NavigationManeger.NavigateTo($"/tutors",true);
+        else NavigationManeger.NavigateTo(TutorsPageAddress, true);
         _isUserAuthenticated = true;
+    }
+
+    private async Task<bool> IsEmailConfirmed()
+    {
+        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        if (userId == null)
+            return false;
+        bool isEmailConfirmed = await HttpClient.GetFromJsonAsync<bool>($"/users/{userId}email/state");
+        return isEmailConfirmed;
     }
 }

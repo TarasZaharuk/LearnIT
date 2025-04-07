@@ -23,4 +23,10 @@
     <ProjectReference Include="..\LearnIT.Application\LearnIT.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="UsersEmailService\EmailConfirmationTemplate.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

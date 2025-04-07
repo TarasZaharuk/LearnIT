@@ -1,0 +1,92 @@
+﻿@page "/user/email-verification"
+@inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+@inject HttpClient HttpClient
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+@using LearnIT.Components
+@using MudBlazor;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+<MudContainer MaxWidth="MaxWidth.Medium"  Class="mx-auto mt-6 text-center">
+    <MudText Typo="Typo.h4" Style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif" Class="mb-1" Color="Color.Primary">Registration</MudText>
+    <MudText Typo="Typo.h6" Class="mb-4" Color="Color.Dark">Check your inbox.</MudText>
+
+    <MudCard Elevation="0" Class="pa-4">
+            <MudImage Src="email-verification-image.png" Fluid="true" Style="margin-left:30%" Width="332" Height="250"></MudImage>
+        <MudText Typo="Typo.body1" Class="mb-4">
+            We've sent you an email at
+            <b> taraszaharuk410@gmail.com</b>. Please click on the button in the email to verify your email address.
+        </MudText>
+
+        <MudText Typo="Typo.body1" Color="Color.Primary" Class="mb-4" Style="cursor: pointer;">
+            <u>Change email and send again</u>
+        </MudText>
+
+        @if (!_isEmailVerified)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Oops, not yet confirmed!</MudText>
+                <MudText Typo="Typo.body2">
+                    Please click on the link in the email. After that, you can continue.
+                </MudText>
+            </MudAlert>
+        }
+        @if (_isEmailVerified)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Your email confirmed!</MudText>
+            </MudAlert>
+        }
+        <MudButton Variant="Variant.Filled" OnClick="OnNextButtonClick" Color="Color.Primary" FullWidth="true" Class="rounded-pill">
+            Next
+        </MudButton>
+    </MudCard>
+</MudContainer>
+
+
+@code {
+    private DotNetObjectReference<UserEmailVerificationPage>? objRef;
+    private bool _isEmailVerified;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isEmailVerified = await IsEmailVerified();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerVisibilityChangeHandler", objRef);
+        }
+    }
+
+
+    private async Task OnNextButtonClick()
+    {
+        _isEmailVerified = await IsEmailVerified();
+    }
+
+    private async Task<bool> IsEmailVerified()
+    {
+        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        if (userId == null)
+            return false;
+        bool isEmailConfirmed = await HttpClient.GetFromJsonAsync<bool>($"/users/{userId}email/state");
+        return isEmailConfirmed;
+    }
+
+    [JSInvokable]
+    public async Task OnTabVisibilityChanged(string state)
+    {
+        _isEmailVerified = await IsEmailVerified();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+}

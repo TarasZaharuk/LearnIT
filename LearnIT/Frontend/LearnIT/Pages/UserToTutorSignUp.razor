@@ -11,8 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticatedHttpClient AuthenticatedHttpClient
 @inject UserAuthenticationStateProvider UserAuthenticationStateProvider
-@if (_genders != null)
-{
+
     <MudContainer MaxWidth="MaxWidth.False">
         <MudGrid Justify="Justify.Center" Style="align-items:center;">
             <MudPaper Style="width:40%;align-items:end;vertical-align:middle;">
@@ -20,10 +19,10 @@
             </MudPaper>
         </MudGrid>
     </MudContainer>
-}
+
 
 @code {
-    private IList<Gender> _genders = null!;
+    private IList<Gender> _genders = new List<Gender> { new Gender { Id = 1, Name = "Male" }, new Gender { Id = 2, Name = "Female" } };
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,7 +48,7 @@
             return;
 
         await RegistrateTutor(userId.Value);
-        NavigationManager.NavigateTo($"/tutor/registration");
+        NavigationManager.NavigateTo($"/user/email-verification");
     }
 
     private async Task RegistrateTutor(int userId)

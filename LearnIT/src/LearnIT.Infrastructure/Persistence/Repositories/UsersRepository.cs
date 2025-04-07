@@ -49,5 +49,11 @@ namespace LearnIT.Infrastructure.Persistence.Repositories
         {
             return await _usersDBContext.Users.Skip(skip).Take(take).ToListAsync(); 
         }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            _usersDBContext.Update(user);
+            await _usersDBContext.SaveChangesAsync();
+        }
     }
 }
