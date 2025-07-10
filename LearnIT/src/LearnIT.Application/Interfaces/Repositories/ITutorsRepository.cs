@@ -19,6 +19,8 @@ namespace LearnIT.Application.Interfaces.Repositories
 
         Task<Tutor?> GetByIdAsync(int id);
 
+        Task<Tutor?> GetByUserIdAsync(int userId);
+
         Task UpdateAsync(Tutor updatedTutor);
     }
 }

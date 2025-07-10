@@ -11,5 +11,11 @@ namespace LearnIT.Application.Interfaces.Repositories
         Task DeleteByIdAsync(int id);
 
         Task<List<User>> GetAllAsync();
+
+        Task<User?> GetByIdAsync(int id);
+
+        Task<User?> GetByEmailAsync(string email);
+
+        Task UpdateUserAsync(User user);
     }
 }

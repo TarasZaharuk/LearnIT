@@ -2,12 +2,29 @@
 @layout LandingLayout
 @inject NavigationManager NavigationManeger
 @inject IDialogService DialogService
+@inject HttpClient HttpClient
+@inject AuthenticatedHttpClient AuthenticatedHttpClient
+@inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 @using DTOs
 @using LearnIT.Components
+@using Shared;
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Security.Claims
+
 @inherits ComponentBase
 <MudPaper Class="landing-overlay" Elevation="0" Width="100%" MinHeight="100vh">
     <MudGrid Justify="Justify.FlexEnd">
-        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnLogInClick">Log In</MudButton>
+        @if(_isUserAuthenticated)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnLogOutClick">Log out</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnLogInClick">Log In</MudButton>
+        }
     </MudGrid>
 
     <MudGrid Justify="Justify.Center" Style="display:flex; vertical-align:middle; justify-content:center; align-items:center;">
@@ -22,9 +39,24 @@
                 <MudItem>
                     <MudButton Variant="Variant.Filled" OnClick="OnFindTutorClick" Color="Color.Primary" Class="action-button">Find Tutor</MudButton>
                 </MudItem>
-                <MudItem>
-                    <MudButton Variant="Variant.Outlined" OnClick="OnBecomeTutorClick" Color="Color.Secondary" Class="action-button">Become a Tutor</MudButton>
-                </MudItem>
+                @if (_isTutor)
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Outlined" Href="/tutor/registration" Color="Color.Secondary" Class="action-button">View Profile</MudButton>
+                    </MudItem>
+                }
+                else if (_isUserAuthenticated & _isEmailConfirmed)
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="action-button">Promote to Tutor</MudButton>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Outlined" OnClick="OnBecomeTutorClick" Color="Color.Secondary" Class="action-button">Become a Tutor</MudButton>
+                    </MudItem>
+                }
             </MudGrid>
         </MudItem>
 
@@ -45,18 +77,79 @@
     </MudGrid>
 </MudPaper>
 @code{
+    private bool _isUserAuthenticated;
+    private bool _isTutor;
+    private bool _isEmailConfirmed;
+
+    private const string UserRegistrationPageAddress = "/user/registration";
+    private const string TutorsPageAddress = "/tutors";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isUserAuthenticated = await UserAuthenticationStateProvider.IsUserAuthenticated();
+        _isEmailConfirmed = await IsEmailConfirmed();
+
+        _isTutor = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+    }
+
     private void OnFindTutorClick()
     {
-        NavigationManeger.NavigateTo("/tutors");
+        NavigationManeger.NavigateTo(TutorsPageAddress);
     }
 
     private void OnBecomeTutorClick()
     {
-        NavigationManeger.NavigateTo("/user/registration");
+        NavigationManeger.NavigateTo(UserRegistrationPageAddress);
     }
 
-    private void OnLogInClick()
+    private async Task OnLogInClick()
     {
-        DialogService.Show<LogInDialog>();
+        if (_isUserAuthenticated) return;
+
+        UserLoginModel? userLoginModel;
+        IDialogReference dialog = await DialogService.ShowAsync<LogInDialog>();
+        DialogResult? dialogResult = await dialog.Result;
+        if (dialogResult == null) return;
+
+        userLoginModel = (UserLoginModel)dialogResult.Data!;
+        if (userLoginModel == null) return;
+
+        await LogIn(userLoginModel);
+    }
+
+    private async Task OnLogOutClick()
+    {
+        await UserAuthenticationStateProvider.MarkUserAsLoggedOut();
+        _isUserAuthenticated = false;
+        StateHasChanged();
+        Snackbar.Add("You are log out");
+    }
+
+    private async Task LogIn(UserLoginModel userLoginModel)
+    {
+
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UserLoginModel>("/login", userLoginModel);
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        string? token = await response.Content.ReadAsStringAsync();
+        if (token != null)
+            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
+
+        bool isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+        if (isUserInTutorRole)
+            NavigationManeger.NavigateTo($"/tutor/registration", true);
+        else NavigationManeger.NavigateTo(TutorsPageAddress, true);
+        _isUserAuthenticated = true;
+    }
+
+    private async Task<bool> IsEmailConfirmed()
+    {
+        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        if (userId == null)
+            return false;
+        bool isEmailConfirmed = await HttpClient.GetFromJsonAsync<bool>($"/users/{userId}email/state");
+        return isEmailConfirmed;
     }
 }

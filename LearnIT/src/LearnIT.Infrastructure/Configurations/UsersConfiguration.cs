@@ -12,6 +12,7 @@ namespace LearnIT.Infrastructure.Configurations
                 .HasOne(u => u.Gender)
                 .WithMany()
                 .HasForeignKey(u => u.GenderId);
+            usersBuilder.HasIndex(u => u.Email).IsUnique();
         }
     }
 }
