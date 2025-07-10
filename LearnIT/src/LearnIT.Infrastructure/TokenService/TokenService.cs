@@ -7,16 +7,21 @@ using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using LearnIT.Infrastructure.TokenService.Interfaces;
+using LearnIT.Infrastructure.TokenService.TokenValidationHandlers;
 
 namespace LearnIT.Infrastructure.TokenService
 {
     public class TokenService : ITokenService
     {
+        private readonly ITokenValidationHandler _handlerChain;
         private readonly byte[] _jwtKey;
         private readonly JwtSecurityTokenHandler _tokenHandler;
-        private readonly TokenValidationParameters _validationParameters;
         private readonly string _issuer;
         private readonly string _audience;
+
+        private readonly DateTime _emailConfirmationTokenExpires = DateTime.UtcNow.AddDays(2);
+        private readonly DateTime _authenticationTokenExpires = DateTime.UtcNow.AddMinutes(120);
 
         public TokenService(IConfiguration configuration)
         {
@@ -24,45 +29,30 @@ namespace LearnIT.Infrastructure.TokenService
             _issuer = configuration["Jwt:Issuer"] ?? throw new ConfigurationErrorsException("'Jwt' section does not exist or 'Jwt:Issuer' value is null");
             _audience = configuration["Jwt:Audience"] ?? throw new ConfigurationErrorsException("'Jwt' section does not exist or 'Jwt:Audience' value is null");
             _jwtKey = Encoding.UTF8.GetBytes(jwtSecret);
+            _tokenHandler = new JwtSecurityTokenHandler();
 
-            _tokenHandler = new JwtSecurityTokenHandler();//di
-            _validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = false, // Ensure the token has not expired
-                IssuerSigningKey = new SymmetricSecurityKey(_jwtKey), // Key used to sign the token
-                ValidateIssuerSigningKey = true
-            };
+            var decryptionHandler = new TokenDecryptionHandler(_jwtKey);
+            var userIdExtractionHandler = new UserIdExtractionHandler();
+            var expirationHandler = new TokenExpirationHandler();
+
+            decryptionHandler.SetNext(userIdExtractionHandler);
+            userIdExtractionHandler.SetNext(expirationHandler);
+
+            _handlerChain = decryptionHandler;
         }
 
-        public TokenValidationProblems TryValidateToken(string token, out int userId)
+        public TokenValidationResponse TryValidateToken(string token)
         {
-            userId = -1;
-            ClaimsPrincipal claimsPrincipal;
-            SecurityToken validatedToken;
-            try
-            {
-                claimsPrincipal = _tokenHandler.ValidateToken(token, _validationParameters, out validatedToken);
-            }
-            catch (SecurityTokenValidationException)
-            {
-                return TokenValidationProblems.SecurityTokenInvalid;
-            }
+            var context = new TokenValidationContext { Token = token };
+            var response = _handlerChain.Handle(context);
 
-            if (!TryGetUserIdFromClaims(claimsPrincipal, out userId))
-                return TokenValidationProblems.SecurityTokenInvalid;
-
-            if (validatedToken.ValidTo < DateTime.Now)
-                return TokenValidationProblems.Expired;
-
-            return TokenValidationProblems.None;
+            return response;
         }
 
         public string GenerateEmailConfirmationToken(string userEmail, string userId)
         {
             IEnumerable<Claim> emailConfirmationClaims = GetUserEmailConfirmationClaims(userEmail, userId);
-            var tokenDescriptor = GetSecurityTokenDescriptor(emailConfirmationClaims, DateTime.UtcNow.AddDays(2));
+            var tokenDescriptor = GetSecurityTokenDescriptor(emailConfirmationClaims, _emailConfirmationTokenExpires);
             SecurityToken token = _tokenHandler.CreateToken(tokenDescriptor);
             return _tokenHandler.WriteToken(token);
         }
@@ -70,7 +60,7 @@ namespace LearnIT.Infrastructure.TokenService
         public string GenerateAuthenticationToken(UserDTO user)
         {
             IEnumerable<Claim> userClaims = GetUserClaims(user);
-            var tokenDescriptor = GetSecurityTokenDescriptor(userClaims, DateTime.UtcNow.AddMinutes(120));//
+            var tokenDescriptor = GetSecurityTokenDescriptor(userClaims, _authenticationTokenExpires);
             SecurityToken token = _tokenHandler.CreateToken(tokenDescriptor);
             return _tokenHandler.WriteToken(token);
         }
@@ -108,15 +98,6 @@ namespace LearnIT.Infrastructure.TokenService
             };
 
             return claims;
-        }
-
-        private bool TryGetUserIdFromClaims(ClaimsPrincipal claims, out int userId)
-        {
-            string? userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (int.TryParse(userIdClaim, out userId))
-                return true;
-            return false;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using LearnIT.Application.DTOs;
 using Shared;
+using Shared.AddUserResponse;
 
 namespace LearnIT.Application.Interfaces.Services
 {
@@ -9,13 +10,14 @@ namespace LearnIT.Application.Interfaces.Services
 
         Task<UserDTO?> GetByIdAsync(int id);
 
-        Task<string> AddAsync(AddUserModel user);
+        Task<AddUserResponse> AddAsync(AddUserModel user);
 
         Task DeleteByIdAsync(int id);
 
         Task<UserDTO?> GetUserByLoginAsync(UserLoginModel userLoginModel);
 
-        Task<bool> IsEmailConfirmed(int userId);
+        Task<bool> IsEmailConfirmed(int id);
 
+        Task<string?> GetEmailByIdAsync(int id);
     }
 }

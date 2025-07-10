@@ -5,7 +5,7 @@ namespace LearnIT.Application.Interfaces
 {
     public interface ITokenService
     {
-        TokenValidationProblems TryValidateToken(string token, out int userId);
+        TokenValidationResponse TryValidateToken(string token);
         string GenerateEmailConfirmationToken(string userEmail, string userId);
 
         string GenerateAuthenticationToken(UserDTO user);

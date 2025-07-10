@@ -74,7 +74,8 @@ namespace LearnIT.WebUI.Server
                     Credentials = new System.Net.NetworkCredential(builder.Configuration["SmtpClientSettings:UserName"], builder.Configuration["SmtpClientSettings:Password"]),
                     Host = builder.Configuration["SmtpClientSettings:Host"]!,
                     Port = int.Parse(builder.Configuration["SmtpClientSettings:Port"]!),
-                    EnableSsl = true
+                    EnableSsl = true,
+                    Timeout = 30000
                 });
             var app = builder.Build();
 

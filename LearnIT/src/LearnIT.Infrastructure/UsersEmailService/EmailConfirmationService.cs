@@ -4,7 +4,6 @@ using LearnIT.Application.Models;
 using LearnIT.Domain.Entities;
 using System.Configuration;
 using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
 using LearnIT.Application.Interfaces.Services.UsersEmailService;
 using System.Reflection;
 
@@ -32,16 +31,16 @@ namespace LearnIT.Infrastructure.EmailService
 
         public async Task<string> ConfirmEmailAsync(string token)
         {
-            TokenValidationProblems tokenValidationProblem = _tokenService.TryValidateToken(token, out int userId);
-            if (tokenValidationProblem is TokenValidationProblems.SecurityTokenInvalid)
+            TokenValidationResponse tokenValidationResponse = _tokenService.TryValidateToken(token);
+            if (tokenValidationResponse.TokenValidationProblem is TokenValidationProblems.SecurityTokenInvalid)
                 return "Your account has not been verified. Please try signing up again.";
-            if (tokenValidationProblem is TokenValidationProblems.Expired)
+            if (tokenValidationResponse.TokenValidationProblem is TokenValidationProblems.Expired)
             {
-                await SendEmailConfirmationToAsync(userId);
+                await SendEmailConfirmationToAsync(tokenValidationResponse.UserId);
                 return "Your confirmation email has expired. We have sent you a new confirmation email.";
             }
 
-            var user = await _usersRepository.GetByIdAsync(userId);
+            var user = await _usersRepository.GetByIdAsync(tokenValidationResponse.UserId);
             if (user is null)
                 return "No user with this email address was found. Please try signing up again.";
 
@@ -51,14 +50,16 @@ namespace LearnIT.Infrastructure.EmailService
             return "Your email address has been confirmed.";
         }
 
-        public async Task SendEmailConfirmationToAsync(int userId)
+        public async Task<EmailSendingIssues> SendEmailConfirmationToAsync(int userId)
         {
             User user = await _usersRepository.GetByIdAsync(userId) ?? throw new Exception($"User with id:{userId} does not exist");
 
             string emailConfirmationToken = _tokenService.GenerateEmailConfirmationToken(user.Email, user.Id.ToString());
             string confirmationLink = $"{_emailConfirmationControllerAddress}/{emailConfirmationToken}";
             string htmlBody = GetEmailConfirmationBody(user.FirstName, confirmationLink);
-            await _emailSender.SendEmailWithHtmlBodyAsync(user.Email, "Verify your email", htmlBody);
+
+            EmailSendResult sendResult = await _emailSender.SendEmailWithHtmlBodyAsync(user.Email, "Verify your email", htmlBody);
+            return sendResult.SendingIssue;
         }
 
         private string GetEmailConfirmationBody(string userName, string confirmationLink)

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using LearnIT.Application.DTOs;
 using LearnIT.Application.Interfaces.Services;
 using Shared;
+using Shared.AddUserResponse;
 
 namespace LearnIT.WebUI.Server.Controllers
 {
@@ -34,12 +35,20 @@ namespace LearnIT.WebUI.Server.Controllers
             return await _usersService.IsEmailConfirmed(id);
         }
 
+        [HttpGet("/users/{id}email")]
+        public async Task<IActionResult> GetUserEmailByIdAsync(int id)
+        {
+            string? email = await _usersService.GetEmailByIdAsync(id);
+            return Ok(email);
+        }
+
         [HttpPost("/user")]
         public async Task<IActionResult> AddUser(AddUserModel addedUser)
         {
-            //
-            string messege = await _usersService.AddAsync(addedUser);
-            return Ok(messege);
+            AddUserResponse addUserResponse = await _usersService.AddAsync(addedUser);
+            if (addUserResponse.Issue is AddingUserIssue.None)
+                return Ok(addUserResponse);
+            else return BadRequest(addUserResponse);
         }
 
         [HttpDelete("/user/{id}")]

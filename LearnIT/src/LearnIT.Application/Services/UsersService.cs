@@ -5,6 +5,8 @@ using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
 using Shared;
 using LearnIT.Application.Interfaces.Services.UsersEmailService;
+using Shared.AddUserResponse;
+using LearnIT.Application.Models;
 
 namespace LearnIT.Application.Services
 {
@@ -22,20 +24,23 @@ namespace LearnIT.Application.Services
             return userDtos;
         }
 
-        public async Task<string> AddAsync(AddUserModel addedUser)
+        public async Task<AddUserResponse> AddAsync(AddUserModel addedUser)
         {
             bool userWithEmaiExist = await IsExistUserWithEmail(addedUser.Email);
             if (userWithEmaiExist)
-                return "This email is already used";
+                return new AddUserResponse(AddingUserIssue.DuplicateEmail);
 
             User user = _mapper.Map<AddUserModel, User>(addedUser);
             int userId = await _usersRepository.AddAsync(user);
-            //take care about 'failed to send email' case 
-            //move EmailConfirmationService, TokenService, EmailSender to Infrastructure layer
-            //return standardized message 
-            await _emailConfirmationService.SendEmailConfirmationToAsync(userId);
 
-            return "user added";
+            EmailSendingIssues issue = await _emailConfirmationService.SendEmailConfirmationToAsync(userId);
+
+            if (issue is EmailSendingIssues.None)
+                return new AddUserResponse(AddingUserIssue.None);
+            if (issue is EmailSendingIssues.InvalidRecipient)
+                return new AddUserResponse(AddingUserIssue.EmailAddressDoesNotExist);
+
+            return new AddUserResponse(AddingUserIssue.UnhandledError);
         }
 
         public async Task DeleteByIdAsync(int id)
@@ -51,8 +56,8 @@ namespace LearnIT.Application.Services
 
             UserDTO userDTO = _mapper.Map<User, UserDTO>(user);
             Tutor? tutor = await _tutorsRepository.GetByUserIdAsync(user.Id);
-            if (tutor != null)
-                userDTO.TutorId = tutor.Id;
+
+            userDTO.TutorId = tutor?.Id;
 
             return userDTO;
         }
@@ -65,8 +70,7 @@ namespace LearnIT.Application.Services
 
             UserDTO userDTO = _mapper.Map<User, UserDTO>(user);
             Tutor? tutor = await _tutorsRepository.GetByUserIdAsync(user.Id);
-            if (tutor != null)
-                userDTO.TutorId = tutor.Id;
+            userDTO.TutorId = tutor?.Id;
 
             return userDTO;
         }
@@ -84,6 +88,12 @@ namespace LearnIT.Application.Services
         {
             User? user = await _usersRepository.GetByEmailAsync(email);
             return user != null;
+        }
+
+        public async Task<string?> GetEmailByIdAsync(int id)
+        {
+            User? user = await _usersRepository.GetByIdAsync(id);
+            return user?.Email;
         }
     }
 }

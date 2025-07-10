@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Atyaf.EBuilder.Data.Seed" Version="3002.1.53" />
+    <PackageReference Include="EmailValidator.NET" Version="1.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

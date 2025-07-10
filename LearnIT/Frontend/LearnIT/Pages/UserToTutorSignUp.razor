@@ -4,6 +4,7 @@
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 @using DTOs;
+@using Shared.AddUserResponse;
 @using Shared;
 @using System.Text.Json;
 @layout LandingLayout
@@ -11,11 +12,12 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticatedHttpClient AuthenticatedHttpClient
 @inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+@inject ISnackbar Snackbar
 
     <MudContainer MaxWidth="MaxWidth.False">
         <MudGrid Justify="Justify.Center" Style="align-items:center;">
             <MudPaper Style="width:40%;align-items:end;vertical-align:middle;">
-                <SignUpForm Genders="_genders" OnUserRegistrationCompleted="HandleUserRegistrationModel" />
+                <SignUpForm EmailError=@_emailError Genders="_genders" OnUserRegistrationCompleted="HandleUserRegistrationModel" />
             </MudPaper>
         </MudGrid>
     </MudContainer>
@@ -23,6 +25,7 @@
 
 @code {
     private IList<Gender> _genders = new List<Gender> { new Gender { Id = 1, Name = "Male" }, new Gender { Id = 2, Name = "Female" } };
+    private string? _emailError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,18 +40,38 @@
     private async Task HandleUserRegistrationModel(AddUserModel addedUser)
     {
         HttpResponseMessage? response = await HttpClient.PostAsJsonAsync("/user", addedUser);
-        if (!response.IsSuccessStatusCode)
+        AddUserResponse? addUserResponse = await response.Content.ReadFromJsonAsync<AddUserResponse>();
+
+        if (response.IsSuccessStatusCode)
+        {
+            UserLoginModel userLoginModel = new UserLoginModel { Email = addedUser.Email, Password = addedUser.Password };
+            await Login(userLoginModel);
+
+            int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+            if (!userId.HasValue)
+                return;
+
+            await RegistrateTutor(userId.Value);
+            NavigationManager.NavigateTo($"/user/email-verification");
+        }
+
+        if (addUserResponse is null || addUserResponse.Issue is AddingUserIssue.UnhandledError)
+        {
+            Snackbar.Add("Some error occurred. Please try again later", Severity.Error);
             return;
+        }
 
-        UserLoginModel userLoginModel = new UserLoginModel {Email = addedUser.Email, Password = addedUser.Password };
-        await Login(userLoginModel);
+        if(addUserResponse.Issue is AddingUserIssue.DuplicateEmail)
+        {
+            Snackbar.Add("The email address is already occupied", Severity.Warning);
+            _emailError = "The email address is already occupied";
+        }
 
-        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
-        if (!userId.HasValue)
-            return;
-
-        await RegistrateTutor(userId.Value);
-        NavigationManager.NavigateTo($"/user/email-verification");
+        if(addUserResponse.Issue is AddingUserIssue.EmailAddressDoesNotExist)
+        {
+            _emailError = "The email address does not exist";
+            Snackbar.Add(_emailError, Severity.Warning);
+        }
     }
 
     private async Task RegistrateTutor(int userId)
