@@ -39,16 +39,16 @@
                 <MudItem>
                     <MudButton Variant="Variant.Filled" OnClick="OnFindTutorClick" Color="Color.Primary" Class="action-button">Find Tutor</MudButton>
                 </MudItem>
-                @if (_isTutor)
+                @if (_isUserAuthenticated & _isTutor)
                 {
                     <MudItem>
-                        <MudButton Variant="Variant.Outlined" Href="/tutor/registration" Color="Color.Secondary" Class="action-button">View Profile</MudButton>
+                        <MudButton Variant="Variant.Outlined" Href="@TutorProfilePageAddress" Color="Color.Secondary" Class="action-button">View Profile</MudButton>
                     </MudItem>
                 }
                 else if (_isUserAuthenticated & _isEmailConfirmed)
                 {
                     <MudItem>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="action-button">Promote to Tutor</MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="OnPromoteToTutorClick" Color="Color.Secondary" Class="action-button">Promote to Tutor</MudButton>
                     </MudItem>
                 }
                 else
@@ -83,14 +83,17 @@
 
     private const string UserRegistrationPageAddress = "/user/registration";
     private const string TutorsPageAddress = "/tutors";
+    private const string TutorProfilePageAddress = "tutor/profile";
 
 
     protected override async Task OnInitializedAsync()
     {
         _isUserAuthenticated = await UserAuthenticationStateProvider.IsUserAuthenticated();
-        _isEmailConfirmed = await IsEmailConfirmed();
-
-        _isTutor = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+        if (_isUserAuthenticated)
+        {
+            _isEmailConfirmed = await IsEmailConfirmed();
+            _isTutor = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+        }
     }
 
     private void OnFindTutorClick()
@@ -101,6 +104,24 @@
     private void OnBecomeTutorClick()
     {
         NavigationManeger.NavigateTo(UserRegistrationPageAddress);
+    }
+
+    private async Task OnPromoteToTutorClick()
+    {
+        await PromoteToTutor();
+        NavigationManeger.NavigateTo(TutorProfilePageAddress, true);
+    }
+
+    private async Task PromoteToTutor()
+    {
+        int userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        AddTutorModel addedTutor = new AddTutorModel { UserId = userId };
+        HttpResponseMessage? response = await AuthenticatedHttpClient.PostAsync<AddTutorModel>("/tutor", addedTutor);
+        if (!response.IsSuccessStatusCode)
+            throw new Exception("Promotion to Tutor is failed");
+
+        await UserAuthenticationStateProvider.UpdateAuthenticationStateAsync();
+
     }
 
     private async Task OnLogInClick()
@@ -128,27 +149,18 @@
 
     private async Task LogIn(UserLoginModel userLoginModel)
     {
-
-        HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UserLoginModel>("/login", userLoginModel);
-        if (!response.IsSuccessStatusCode)
-            return;
-
-        string? token = await response.Content.ReadAsStringAsync();
-        if (token != null)
-            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
+        await UserAuthenticationStateProvider.Login(userLoginModel);
 
         bool isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
         if (isUserInTutorRole)
-            NavigationManeger.NavigateTo($"/tutor/registration", true);
+            NavigationManeger.NavigateTo(TutorProfilePageAddress, true);
         else NavigationManeger.NavigateTo(TutorsPageAddress, true);
         _isUserAuthenticated = true;
     }
 
     private async Task<bool> IsEmailConfirmed()
     {
-        int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
-        if (userId == null)
-            return false;
+        int userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
         bool isEmailConfirmed = await HttpClient.GetFromJsonAsync<bool>($"/users/{userId}email/state");
         return isEmailConfirmed;
     }

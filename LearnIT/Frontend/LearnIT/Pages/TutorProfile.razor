@@ -1,4 +1,4 @@
-﻿@page "/tutor/registration"
+﻿@page "/tutor/profile"
 @inject NavigationManager NavigationManeger
 @inject HttpClient httpClient
 @inject IJSRuntime JsRuntime
@@ -10,82 +10,82 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
-@attribute [Authorize(Roles = "Tutor")]
 <br>
-<AuthorizeView Roles="Tutor">
-    <Authorized>
-        <MudStack>
-            <MudStack Style="border:dashed" Row="true">
-                <MudStack Spacing="0">
-                    <MudImage Width="150" Height="150" Src="@(_logoBase64 == null ? "DefultTutorLogo.jpg" : _logoBase64)" />
-                    <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="OnLogoChanged" MaximumFileCount="1">
-                        <ActivatorContent>
-                            <MudButton StartIcon="@Icons.Material.Filled.AddAPhoto">Change logo</MudButton>
-                        </ActivatorContent>
-                    </MudFileUpload>
-                </MudStack>
-                <MudTextField @bind-Value="SummaryOfQualification" Label="Summary of Qualification" Variant="Variant.Outlined" Lines="6" Required="true" />
+
+@if (_isUserAuthenticated && _isUserInTutorRole)
+{
+    <MudStack>
+        <MudStack Style="border:dashed" Row="true">
+            <MudStack Spacing="0">
+                <MudImage Width="150" Height="150" Src="@(_logoBase64 == null ? "DefultTutorLogo.jpg" : _logoBase64)" />
+                <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="OnLogoChanged" MaximumFileCount="1">
+                    <ActivatorContent>
+                        <MudButton StartIcon="@Icons.Material.Filled.AddAPhoto">Change logo</MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
             </MudStack>
-            <MudStack Row="true">
-                <MudGrid Class="form-container">
-                    <MudTextField @bind-Value="WagePerHour" Label="Wage per Hour" Variant="Variant.Outlined" Required="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+            <MudTextField @bind-Value="SummaryOfQualification" Label="Summary of Qualification" Variant="Variant.Outlined" Lines="6" Required="true" />
+        </MudStack>
+        <MudStack Row="true">
+            <MudGrid Class="form-container">
+                <MudTextField @bind-Value="WagePerHour" Label="Wage per Hour" Variant="Variant.Outlined" Required="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
 
-                    <MudTextField @bind-Value="JobTitle" Label="Job Title" Variant="Variant.Outlined" Required="true" />
+                <MudTextField @bind-Value="JobTitle" Label="Job Title" Variant="Variant.Outlined" Required="true" />
 
-                    <MudTextField @bind-Value="GitHubUrl" Label="GitHub URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.GitHub" HelperText="Optional" />
+                <MudTextField @bind-Value="GitHubUrl" Label="GitHub URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.GitHub" HelperText="Optional" />
 
-                    <MudTextField @bind-Value="LinkedInUrl" Label="LinkedIn URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.LinkedIn" HelperText="Optional" />
-                </MudGrid>
+                <MudTextField @bind-Value="LinkedInUrl" Label="LinkedIn URL" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.LinkedIn" HelperText="Optional" />
+            </MudGrid>
 
-                <MudStack Style="border:dashed; min-width:40%">
-                    <MudStack Style="margin:17px" Spacing="0">
+            <MudStack Style="border:dashed; min-width:40%">
+                <MudStack Style="margin:17px" Spacing="0">
 
-                        <MudTextField T="string" Immediate="true"
-                                      Label="Add Skill"
-                                      Variant="Variant.Outlined"
-                                      Adornment="Adornment.End"
-                                      TextChanged="OnSkillTextChanged"
-                                      @bind-Value="_skillName"
-                                      OnAdornmentClick="(e) => AddSkill(_skillName)"
-                                      AdornmentIcon="@Icons.Material.Filled.Add"
-                                      AdornmentColor="Color.Secondary">
-                        </MudTextField>
+                    <MudTextField T="string" Immediate="true"
+                                  Label="Add Skill"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.End"
+                                  TextChanged="OnSkillTextChanged"
+                                  @bind-Value="_skillName"
+                                  OnAdornmentClick="(e) => AddSkill(_skillName)"
+                                  AdornmentIcon="@Icons.Material.Filled.Add"
+                                  AdornmentColor="Color.Secondary">
+                    </MudTextField>
 
-                        @if (_skillsListExpanded && _filteredSkills != null && _filteredSkills.Any())
+                    @if (_skillsListExpanded && _filteredSkills != null && _filteredSkills.Any())
+                    {
+                        <MudPopover AnchorOrigin="Origin.BottomLeft" DropShadow="false" Open="_skillsListExpanded" Class="popover">
+                            <MudList SelectedValuesChanged="SelectedSkillsChanged" SelectedValues="_selectedSkillsReadonly" CheckedIcon="@Icons.Material.Outlined.CheckBox" SelectionMode="SelectionMode.MultiSelection" T="string">
+                                @foreach (string skill in _filteredSkills)
+                                {
+                                    <MudListItem T="string" Value="skill">@skill</MudListItem>
+                                }
+                            </MudList>
+                        </MudPopover>
+                    }
+                </MudStack>
+                <MudSpacer />
+                <MudStack Wrap="Wrap.Wrap" Row="true" Spacing="0" Style="overflow-y:auto;">
+                    @if (_selectedskills != null && _selectedskills.Any())
+                    {
+                        @foreach (string skill in _selectedskills)
                         {
-                            <MudPopover AnchorOrigin="Origin.BottomLeft" DropShadow="false" Open="_skillsListExpanded" Class="popover">
-                                <MudList SelectedValuesChanged="SelectedSkillsChanged" SelectedValues="_selectedSkillsReadonly" CheckedIcon="@Icons.Material.Outlined.CheckBox" SelectionMode="SelectionMode.MultiSelection" T="string">
-                                    @foreach (string skill in _filteredSkills)
-                                    {
-                                        <MudListItem T="string" Value="skill">@skill</MudListItem>
-                                    }
-                                </MudList>
-                            </MudPopover>
+                            <MudChip T="string" Color="Color.Info" Label="true" OnClose="(e) => RemoveSkill(e.Value!)" Value="skill">@skill</MudChip>
                         }
-                    </MudStack>
-                    <MudSpacer />
-                    <MudStack Wrap="Wrap.Wrap" Row="true" Spacing="0" Style="overflow-y:auto;">
-                        @if (_selectedskills != null && _selectedskills.Any())
-                        {
-                            @foreach (string skill in _selectedskills)
-                            {
-                                <MudChip T="string" Color="Color.Info" Label="true" OnClose="(e) => RemoveSkill(e.Value!)" Value="skill">@skill</MudChip>
-                            }
-                        }
-                    </MudStack>
+                    }
                 </MudStack>
             </MudStack>
         </MudStack>
-        <br>
-        <MudButton FullWidth="true" OnClick="OnSaveChangesClick" Disabled="@(string.IsNullOrWhiteSpace(JobTitle) || string.IsNullOrWhiteSpace(SummaryOfQualification))" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">
-            Save Changes
-        </MudButton>
-    </Authorized>
-    <NotAuthorized>
-        <p role="alert">Sorry, there's nothing at this address.</p>
-    </NotAuthorized>
-</AuthorizeView>
+    </MudStack>
+    <br>
+    <MudButton FullWidth="true" OnClick="OnSaveChangesClick" Disabled="@(string.IsNullOrWhiteSpace(JobTitle) || string.IsNullOrWhiteSpace(SummaryOfQualification))" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">
+        Save Changes
+    </MudButton>
+}
 
+else
+{
+    <p role="alert">Sorry, there's nothing at this address.</p>
+}
 
 <script>
     window.registerOutsideClickListener = (dotNetHelper) => {
@@ -100,6 +100,10 @@
 
 @code {
     private int _tutorId;
+
+    private bool _isUserInTutorRole;
+
+    private bool _isUserAuthenticated;
 
     private IList<Skill>? _skills;
 
@@ -129,9 +133,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        bool isUserAuthenticated = await UserAuthenticationStateProvider.IsUserAuthenticated();
-        bool isUserInRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
-        if (isUserAuthenticated && isUserInRole)
+        _isUserAuthenticated = await UserAuthenticationStateProvider.IsUserAuthenticated();
+        _isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
+        if (_isUserAuthenticated && _isUserInTutorRole)
         {
             _tutorId = await GetTutorId() ?? throw new ArgumentNullException();
             await InitSkills();
@@ -207,14 +211,14 @@
     private UpdateTutorGeneralInfoModel GetUpdatedTutor()
     {
         UpdateTutorGeneralInfoModel updateTutor = new UpdateTutorGeneralInfoModel
-            {
-                TutorId = _tutorId,
-                JobTitle = JobTitle,
-                SummaryOfQualification = SummaryOfQualification,
-                WagePerHour = WagePerHour,
-                GitHubUrl = GitHubUrl,
-                LinkedInUrl = LinkedInUrl
-            };
+        {
+            TutorId = _tutorId,
+            JobTitle = JobTitle,
+            SummaryOfQualification = SummaryOfQualification,
+            WagePerHour = WagePerHour,
+            GitHubUrl = GitHubUrl,
+            LinkedInUrl = LinkedInUrl
+        };
 
         return updateTutor;
     }

@@ -1,22 +1,27 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
-using Blazored.LocalStorage;
+using Shared;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace LearnIT
 {
     public class UserAuthenticationStateProvider : AuthenticationStateProvider
     {
         private readonly ILocalStorageService _localStorageService;
+        private readonly AuthenticatedHttpClient _authenticatedHttpClient;
 
-        public UserAuthenticationStateProvider(ILocalStorageService localStorageService)
+        public UserAuthenticationStateProvider(ILocalStorageService localStorageService, AuthenticatedHttpClient authenticatedHttpClient)
         {
             _localStorageService = localStorageService;
+            _authenticatedHttpClient = authenticatedHttpClient;
         }
+
+        private const string AuthTokenItem = "authToken";
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var token = await _localStorageService.GetItemAsync<string>("authToken");
+            var token = await _localStorageService.GetItemAsync<string>(AuthTokenItem);
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -28,7 +33,7 @@ namespace LearnIT
 
             if (jwtToken.ValidTo < DateTime.UtcNow)
             {
-                await _localStorageService.RemoveItemAsync("authToken");
+                await _localStorageService.RemoveItemAsync(AuthTokenItem);
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
@@ -47,28 +52,47 @@ namespace LearnIT
         public async Task<bool> IsUserInRole(string role)
         {
             AuthenticationState authenticationState = await GetAuthenticationStateAsync();
-            return await IsUserAuthenticated() && authenticationState.User.IsInRole(role);
+            return await IsUserAuthenticated() && authenticationState.User.FindFirst("Role")?.Value == role; ;
         }
 
-        public async Task<int?> GetAuthenticatedUserIdAsync()
+        public async Task<int> GetAuthenticatedUserIdAsync()
         {
             AuthenticationState authenticationState = await GetAuthenticationStateAsync();
             string? tutorIdClaim = authenticationState.User.FindFirst("Id")?.Value;
             bool isConvertedSuccessfully = int.TryParse(tutorIdClaim , out int userId);
             if (isConvertedSuccessfully)
                 return userId;
-            return null;
+            throw new Exception("Failed to extract 'Id' claim");
         }
 
-        public async Task MarkUserAsAuthenticated(string token)
+        private async Task MarkUserAsAuthenticated(string token)
         {
-            await _localStorageService.SetItemAsync("authToken", token);
+            await _localStorageService.SetItemAsync(AuthTokenItem, token);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+
+        public async Task Login(UserLoginModel userLoginModel)
+        {
+            HttpResponseMessage response = await _authenticatedHttpClient.PostAsync<UserLoginModel>("/login", userLoginModel);
+
+            string? token = await response.Content.ReadAsStringAsync();
+            if (token != null)
+                await MarkUserAsAuthenticated(token);
+        }
+
+        public async Task UpdateAuthenticationStateAsync()
+        {
+            HttpResponseMessage responseMessage = await _authenticatedHttpClient.GetAsync("/token/renewed");
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                string updatedToken = await responseMessage.Content.ReadAsStringAsync();
+                await MarkUserAsAuthenticated(updatedToken);
+            }
         }
 
         public async Task MarkUserAsLoggedOut()
         {
-            await _localStorageService.RemoveItemAsync("authToken");
+            await _localStorageService.RemoveItemAsync(AuthTokenItem);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
     }

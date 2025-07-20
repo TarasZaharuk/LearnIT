@@ -19,11 +19,11 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [HttpGet("/email/{token}")]
-        public async Task<IActionResult> ConfirmEmail([FromRoute] string token)
+        public async Task ConfirmEmail([FromRoute] string token)
         {
             string emailVerificationMessage = await _emailConfirmationService.ConfirmEmailAsync(token);
             //return standardized message instead of text
-            return Ok(emailVerificationMessage);
+            Response.Redirect(_homePageAddress);
         }
     }
 }
