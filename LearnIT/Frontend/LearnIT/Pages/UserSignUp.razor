@@ -47,11 +47,6 @@
             UserLoginModel userLoginModel = new UserLoginModel { Email = addedUser.Email, Password = addedUser.Password };
             await Login(userLoginModel);
 
-            int? userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
-            if (!userId.HasValue)
-                return;
-
-            await RegistrateTutor(userId.Value);
             NavigationManager.NavigateTo($"/user/email-verification");
         }
 
@@ -74,20 +69,8 @@
         }
     }
 
-    private async Task RegistrateTutor(int userId)
-    {
-        AddTutorModel addedTutor = new AddTutorModel{UserId = userId};
-        HttpResponseMessage? response = await AuthenticatedHttpClient.PostAsync<AddTutorModel>("/tutor", addedTutor);
-        if (!response.IsSuccessStatusCode)
-            throw new Exception("Tutor is not added");
-    }
-
     private async Task Login(UserLoginModel userLoginModel)
     {
-        HttpResponseMessage response = await HttpClient.PostAsJsonAsync<UserLoginModel>("/login", userLoginModel);
-
-        string? token = await response.Content.ReadAsStringAsync();
-        if (token != null)
-            await UserAuthenticationStateProvider.MarkUserAsAuthenticated(token);
+        await UserAuthenticationStateProvider.Login(userLoginModel);
     }
 }

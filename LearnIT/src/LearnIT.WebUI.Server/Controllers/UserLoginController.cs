@@ -4,6 +4,9 @@ using LearnIT.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using LearnIT.Application.Interfaces.Repositories;
+using LearnIT.Domain;
+using LearnIT.Domain.Entities;
 
 
 namespace LearnIT.WebUI.Server.Controllers
@@ -30,6 +33,20 @@ namespace LearnIT.WebUI.Server.Controllers
             if (user == null)
                 return Unauthorized();
             
+            string tokenString = _tokenService.GenerateAuthenticationToken(user);
+            return Ok(tokenString);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("/token/renewed")]
+        public async Task<IActionResult> GetRenewedToken()
+        {
+            string? tutorIdClaim = User.FindFirst("Id")?.Value;
+
+            int.TryParse(tutorIdClaim, out int userId);
+            UserDTO? user = await _usersService.GetByIdAsync(userId);
+            if (user == null)
+                return Unauthorized();
             string tokenString = _tokenService.GenerateAuthenticationToken(user);
             return Ok(tokenString);
         }
