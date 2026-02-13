@@ -1,0 +1,24 @@
+﻿@page "/tutor/appointments"
+@inherits ComponentBase
+@layout MainLayout
+@using System.Globalization;
+@using LearnIT.Components;
+<h3>TutorsAppointments</h3>
+
+<MudCustomCalendar OnSelectedItemsChange="OnselectedItemsChange"></MudCustomCalendar>
+
+
+
+@code {
+
+    private bool _isOpen = false;
+
+    private List<CalendarItem> _selectedItems = [];
+
+    private void OnselectedItemsChange(List<CalendarItem> items)
+    {
+        _isOpen = !_isOpen;
+        _selectedItems = items;
+        // Handle the selected items change
+    }
+}

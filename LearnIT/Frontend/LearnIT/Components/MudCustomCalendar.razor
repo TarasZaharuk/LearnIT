@@ -1,0 +1,124 @@
+﻿@inherits ComponentBase
+@using System.Globalization;
+
+<MudCalendar EnableResizeItems="true"  EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="_events"/>
+@code {
+    [Parameter]
+    public EventCallback<List<CalendarItem>> OnSelectedItemsChange { get; set; }
+
+    private CalendarItem? _selectedCalendarItem;
+
+    private List<CalendarItem> SelectedDayEvents = [];
+
+    private MudCalendar? _calendar;
+
+    private bool _isOpen;
+
+    private List<CalendarItem> _events = new()
+{
+    // Week 1
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddHours(9),
+        End = DateTime.Today.AddHours(10),
+        Text = "C# Basics Lecture"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddHours(11),
+        End = DateTime.Today.AddHours(12),
+        Text = "Student Q&A Session"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddHours(14),
+        End = DateTime.Today.AddHours(15.5),
+        Text = "Project Review Meeting"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(1).AddHours(10),
+        End = DateTime.Today.AddDays(1).AddHours(11.5),
+        Text = "Advanced C# Workshop"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(2).AddHours(13),
+        End = DateTime.Today.AddDays(2).AddHours(14),
+        Text = "One-on-One Tutoring"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(3).AddHours(9),
+        End = DateTime.Today.AddDays(3).AddHours(10),
+        Text = "Code Review Session"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(4).AddHours(15),
+        End = DateTime.Today.AddDays(4).AddHours(16),
+        Text = "Team Meeting"
+    },
+
+    // Week 2
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(7).AddHours(10),
+        End = DateTime.Today.AddDays(7).AddHours(11),
+        Text = "C# LINQ Deep Dive"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(7).AddHours(12),
+        End = DateTime.Today.AddDays(7).AddHours(13),
+        Text = "Student Feedback Session"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(8).AddHours(9),
+        End = DateTime.Today.AddDays(8).AddHours(10),
+        Text = "Design Patterns Lecture"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(9).AddHours(14),
+        End = DateTime.Today.AddDays(9).AddHours(15.5),
+        Text = "Hands-on Lab: Async Programming"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(10).AddHours(11),
+        End = DateTime.Today.AddDays(10).AddHours(12),
+        Text = "Mentoring Session"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(11).AddHours(15),
+        End = DateTime.Today.AddDays(11).AddHours(16),
+        Text = "Exam Preparation Workshop"
+    },
+    new CalendarItem
+    {
+        Start = DateTime.Today.AddDays(12).AddHours(10),
+        End = DateTime.Today.AddDays(12).AddHours(11),
+        Text = "C# Unit Testing Lecture"
+    }
+};
+
+
+    private async Task OnCellClick(DateTime selectedDay)
+    {
+        var selectedDate = selectedDay.Date.Date;
+        var selectedEvents = _events.Where(e => e.Start.Date <= selectedDate && (e.End == null || e.End.Value.Date >= selectedDate)).ToList();
+        await OnSelectedItemsChange.InvokeAsync(selectedEvents);
+        SelectedDayEvents = selectedEvents;
+        _isOpen = true;
+
+    }
+
+    private async Task OnItemChange(CalendarItem item)
+    {
+        _selectedCalendarItem = item;
+        await InvokeAsync(StateHasChanged);
+    }
+}

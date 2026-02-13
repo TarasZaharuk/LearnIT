@@ -109,7 +109,7 @@
     private async Task OnPromoteToTutorClick()
     {
         await PromoteToTutor();
-        NavigationManeger.NavigateTo(TutorProfilePageAddress, true);
+        NavigationManeger.NavigateTo(TutorProfilePageAddress);
     }
 
     private async Task PromoteToTutor()
@@ -153,8 +153,8 @@
 
         bool isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
         if (isUserInTutorRole)
-            NavigationManeger.NavigateTo(TutorProfilePageAddress, true);
-        else NavigationManeger.NavigateTo(TutorsPageAddress, true);
+            NavigationManeger.NavigateTo(TutorProfilePageAddress);
+        else NavigationManeger.NavigateTo(TutorsPageAddress);
         _isUserAuthenticated = true;
     }
 

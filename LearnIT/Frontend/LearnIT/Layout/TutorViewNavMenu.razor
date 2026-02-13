@@ -1,0 +1,29 @@
+﻿<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-2.5">
+            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        </div>
+        <div class="nav-item px-2.5">
+            <MudNavLink Href="tutors" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.People">Tutors</MudNavLink>
+        </div>
+        <div class="nav-item px-2.5">
+            <MudNavLink Href="tutor\profile" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ManageAccounts">Profile</MudNavLink>
+        </div>
+
+        <div class="nav-item px-2.5">
+            <MudNavLink Href="tutor\appointments" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth">Appointments</MudNavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
