@@ -1,7 +1,21 @@
 ﻿@inherits ComponentBase
 @using System.Globalization;
 
-<MudCalendar EnableResizeItems="true"  EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="_events"/>
+<MudCalendar EnableResizeItems="true"  EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="_events" MonthCellMinHeight="160">
+    <CellTemplate Context="context">
+            <div style="background-color: rgb(17, 196, 77);">
+                <MudText Style="color: #ffffff;" Typo="Typo.body1" Align="Align.Center">
+                    @(context.Start?.ToString("HH:mm") ?? "--:--")- @(context.End?.ToString("HH:mm") ?? "--:--")
+                </MudText>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 8px;">
+                <MudButton OnClick="@((e) => HandleItemClick(context))" Style="width: 100%; text-transform: none; justify-content: flex-start;">
+                    <MudText Typo="Typo.body2">@context.Text</MudText>
+                </MudButton>
+            </div>
+        </div>
+    </CellTemplate>
+</MudCalendar>
 @code {
     [Parameter]
     public EventCallback<List<CalendarItem>> OnSelectedItemsChange { get; set; }
@@ -13,6 +27,7 @@
     private MudCalendar? _calendar;
 
     private bool _isOpen;
+    private string GetColor(Color color) => $"var(--mud-palette-{color.ToDescriptionString()})";
 
     private List<CalendarItem> _events = new()
 {
@@ -120,5 +135,11 @@
     {
         _selectedCalendarItem = item;
         await InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleItemClick(CalendarItem item)
+    {
+        _selectedCalendarItem = item;
+        return InvokeAsync(StateHasChanged);
     }
 }

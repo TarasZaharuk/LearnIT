@@ -22,6 +22,44 @@ namespace LearnIT.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("LearnIT.Domain.Entities.Consultation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttendeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("End")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("TutorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttendeeId");
+
+                    b.HasIndex("TutorId");
+
+                    b.ToTable("Consultations");
+                });
+
             modelBuilder.Entity("LearnIT.Domain.Entities.Gender", b =>
                 {
                     b.Property<int>("Id")
@@ -174,6 +212,25 @@ namespace LearnIT.Infrastructure.Migrations
                     b.HasIndex("GenderId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("LearnIT.Domain.Entities.Consultation", b =>
+                {
+                    b.HasOne("LearnIT.Domain.Entities.User", "Attendee")
+                        .WithMany()
+                        .HasForeignKey("AttendeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("LearnIT.Domain.Entities.Tutor", "Tutor")
+                        .WithMany()
+                        .HasForeignKey("TutorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Attendee");
+
+                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>
