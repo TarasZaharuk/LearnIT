@@ -1,16 +1,22 @@
 ﻿@inherits ComponentBase
+@inject IDialogService DialogService
+@using LearnIT.Components.AppointmentsCalender
 @using System.Globalization;
+@using LearnIT.DTOs
+@using Shared
+@using MudBlazor
 
-<MudCalendar EnableResizeItems="true"  EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="_events" MonthCellMinHeight="160">
+<MudCalendar EnableResizeItems="true" EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="@Consultations" MonthCellMinHeight="160">
     <CellTemplate Context="context">
+        <div style="width: 100%; height: 100%; border: 2px solid purple;">
             <div style="background-color: rgb(17, 196, 77);">
                 <MudText Style="color: #ffffff;" Typo="Typo.body1" Align="Align.Center">
-                    @(context.Start?.ToString("HH:mm") ?? "--:--")- @(context.End?.ToString("HH:mm") ?? "--:--")
+                    @context.Start.ToString("HH:mm") - @(context.End == null ? "--:--" : context.End.Value.ToString("HH:mm"))
                 </MudText>
             </div>
             <div style="flex: 1; overflow-y: auto; padding: 8px;">
                 <MudButton OnClick="@((e) => HandleItemClick(context))" Style="width: 100%; text-transform: none; justify-content: flex-start;">
-                    <MudText Typo="Typo.body2">@context.Text</MudText>
+                    <MudText Typo="Typo.body2">@((context as ConsultationDTO)?.Title ?? context.Text)</MudText>
                 </MudButton>
             </div>
         </div>
@@ -18,116 +24,21 @@
 </MudCalendar>
 @code {
     [Parameter]
-    public EventCallback<List<CalendarItem>> OnSelectedItemsChange { get; set; }
+    public EventCallback<List<ConsultationDTO>> OnSelectedItemsChange { get; set; }
+
+    [Parameter]
+    public List<ConsultationDTO> Consultations { get; set; } = new();
 
     private CalendarItem? _selectedCalendarItem;
 
-    private List<CalendarItem> SelectedDayEvents = [];
-
-    private MudCalendar? _calendar;
-
-    private bool _isOpen;
-    private string GetColor(Color color) => $"var(--mud-palette-{color.ToDescriptionString()})";
-
-    private List<CalendarItem> _events = new()
-{
-    // Week 1
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddHours(9),
-        End = DateTime.Today.AddHours(10),
-        Text = "C# Basics Lecture"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddHours(11),
-        End = DateTime.Today.AddHours(12),
-        Text = "Student Q&A Session"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddHours(14),
-        End = DateTime.Today.AddHours(15.5),
-        Text = "Project Review Meeting"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(1).AddHours(10),
-        End = DateTime.Today.AddDays(1).AddHours(11.5),
-        Text = "Advanced C# Workshop"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(2).AddHours(13),
-        End = DateTime.Today.AddDays(2).AddHours(14),
-        Text = "One-on-One Tutoring"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(3).AddHours(9),
-        End = DateTime.Today.AddDays(3).AddHours(10),
-        Text = "Code Review Session"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(4).AddHours(15),
-        End = DateTime.Today.AddDays(4).AddHours(16),
-        Text = "Team Meeting"
-    },
-
-    // Week 2
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(7).AddHours(10),
-        End = DateTime.Today.AddDays(7).AddHours(11),
-        Text = "C# LINQ Deep Dive"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(7).AddHours(12),
-        End = DateTime.Today.AddDays(7).AddHours(13),
-        Text = "Student Feedback Session"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(8).AddHours(9),
-        End = DateTime.Today.AddDays(8).AddHours(10),
-        Text = "Design Patterns Lecture"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(9).AddHours(14),
-        End = DateTime.Today.AddDays(9).AddHours(15.5),
-        Text = "Hands-on Lab: Async Programming"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(10).AddHours(11),
-        End = DateTime.Today.AddDays(10).AddHours(12),
-        Text = "Mentoring Session"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(11).AddHours(15),
-        End = DateTime.Today.AddDays(11).AddHours(16),
-        Text = "Exam Preparation Workshop"
-    },
-    new CalendarItem
-    {
-        Start = DateTime.Today.AddDays(12).AddHours(10),
-        End = DateTime.Today.AddDays(12).AddHours(11),
-        Text = "C# Unit Testing Lecture"
-    }
-};
-
-
+    private List<ConsultationDTO> SelectedDayEvents = [];
     private async Task OnCellClick(DateTime selectedDay)
     {
+        await DialogService.ShowAsync<AddConsultationDialog>("Add Consultation");
         var selectedDate = selectedDay.Date.Date;
-        var selectedEvents = _events.Where(e => e.Start.Date <= selectedDate && (e.End == null || e.End.Value.Date >= selectedDate)).ToList();
+        var selectedEvents = Consultations.Where(e => e.Start.Date <= selectedDate && (e.End == null || e.End.Value.Date >= selectedDate)).ToList();
         await OnSelectedItemsChange.InvokeAsync(selectedEvents);
         SelectedDayEvents = selectedEvents;
-        _isOpen = true;
 
     }
 

@@ -58,12 +58,12 @@ public class ConsultationsRepository : IConsultationsRepository
             .SingleOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task<List<Consultation>> GetByAttendeeIdAsync(int attendeeId)
+    public async Task<List<Consultation>> GetByUserIdAsync(int userId)
     {
         return await _learnITDBContext.Consultations
             .Include(c => c.Attendee)
             .Include(c => c.Tutor)
-            .Where(c => c.AttendeeId == attendeeId)
+            .Where(c => c.AttendeeId == userId)
             .ToListAsync();
     }
 

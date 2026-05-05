@@ -122,6 +122,12 @@ namespace LearnIT.WebUI.Server
                 });
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<LearnITDBContext>();
+                db.Database.Migrate();
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -129,7 +135,10 @@ namespace LearnIT.WebUI.Server
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            app.MapFallbackToFile("index.html");
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles();
+
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors("AllowAll");

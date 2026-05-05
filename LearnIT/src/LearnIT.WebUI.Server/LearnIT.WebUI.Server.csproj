@@ -5,12 +5,14 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>false</InvariantGlobalization>
-	</PropertyGroup>
+	  <UserSecretsId>61c42d20-efd1-4c70-b546-76129964c5d0</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
 		<PackageReference Include="DnsClient" Version="1.8.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.23" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,8 +23,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="../LearnIT.Application/LearnIT.Application.csproj" />
 		<ProjectReference Include="..\..\Shared\Shared.csproj" />
 		<ProjectReference Include="..\LearnIT.Infrastructure\LearnIT.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Frontend\LearnIT\LearnIT.csproj" />
 	</ItemGroup>
 
 </Project>

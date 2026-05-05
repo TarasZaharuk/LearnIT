@@ -16,7 +16,7 @@ namespace LearnIT.Application.Interfaces.Services
 
         Task<ConsultationDTO?> GetByIdAsync(int id);
 
-        Task<List<ConsultationDTO>> GetByAttendeeIdAsync(int attendeeId);
+        Task<List<ConsultationDTO>> GetByUserIdAsync(int userId);
 
         Task<List<ConsultationDTO>> GetByTutorIdAsync(int tutorId);
 

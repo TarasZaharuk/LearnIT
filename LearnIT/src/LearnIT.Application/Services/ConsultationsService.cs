@@ -57,9 +57,9 @@ namespace LearnIT.Application.Services
             return consultationDTO;
         }
 
-        public async Task<List<ConsultationDTO>> GetByAttendeeIdAsync(int attendeeId)
+        public async Task<List<ConsultationDTO>> GetByUserIdAsync(int userId)
         {
-            List<Consultation> consultations = await _consultationsRepository.GetByAttendeeIdAsync(attendeeId);
+            List<Consultation> consultations = await _consultationsRepository.GetByUserIdAsync(userId);
             List<ConsultationDTO> consultationDTOs = _mapper.Map<List<Consultation>, List<ConsultationDTO>>(consultations);
             return consultationDTOs;
         }

@@ -17,14 +17,14 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         //todo: Update to Authorize and check if user has access
-        [HttpGet("/consultations")]
+        [HttpGet]
         public async Task<List<ConsultationDTO>> GetAllConsultationsAsync()
         {
             return await _consultationsService.GetAllAsync();
         }
 
         //todo: Update to Authorize and check if user has access
-        [HttpGet("/consultations/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetConsultationByIdAsync(int id)
         {
             ConsultationDTO? consultation = await _consultationsService.GetByIdAsync(id);
@@ -35,28 +35,27 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         //todo: Update to Authorize and check if user has access
-        [HttpGet("/consultations/attendee/{attendeeId}")]
-        public async Task<List<ConsultationDTO>> GetConsultationsByAttendeeIdAsync(int attendeeId)
-        {
-            return await _consultationsService.GetByAttendeeIdAsync(attendeeId);
-        }
-
-        //todo: Update to Authorize and check if user has access
-        [HttpGet("/consultations/tutor/{tutorId}")]
+        [HttpGet("tutor/{tutorId}")]
         public async Task<List<ConsultationDTO>> GetConsultationsByTutorIdAsync(int tutorId)
         {
             return await _consultationsService.GetByTutorIdAsync(tutorId);
         }
 
+        [HttpGet("user/{userId}")]
+        public async Task<List<ConsultationDTO>> GetConsultationsByUserIdAsync(int userId)
+        {
+            return await _consultationsService.GetByUserIdAsync(userId);
+        }
+
         //todo: Update to Authorize and check if user has access
-        [HttpGet("/consultations/date-range")]
+        [HttpGet("date-range")]
         public async Task<List<ConsultationDTO>> GetConsultationsByDateRangeAsync([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             return await _consultationsService.GetByDateRangeAsync(startDate, endDate);
         }
 
         [Authorize(Roles = "Tutor")]
-        [HttpPost("/consultations")]
+        [HttpPost]
         public async Task<IActionResult> AddConsultationAsync(AddConsultationModel consultation)
         {
             IActionResult? tokenAccessError = GetTokenAccessError(consultation.TutorId);
@@ -67,7 +66,7 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [Authorize(Roles = "Tutor")]
-        [HttpPost("/consultations/batch")]
+        [HttpPost("batch")]
         public async Task<IActionResult> AddConsultationsAsync(List<AddConsultationModel> consultations)
         {
             if (!consultations.Any())
@@ -85,7 +84,7 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [Authorize(Roles = "Tutor")]
-        [HttpPut("/consultations/{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateConsultationAsync(int id, UpdateConsultationModel consultation)
         {
             if (id != consultation.Id)
@@ -99,7 +98,7 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [Authorize(Roles = "Tutor")]
-        [HttpDelete("/consultations/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteConsultationAsync(int id)
         {
             ConsultationDTO? consultation = await _consultationsService.GetByIdAsync(id);
@@ -114,7 +113,7 @@ namespace LearnIT.WebUI.Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("/consultations")]
+        [HttpDelete]
         public async Task DeleteAllConsultationsAsync()
         {
             await _consultationsService.DeleteAllAsync();
