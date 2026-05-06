@@ -104,6 +104,108 @@ namespace LearnIT.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GeneralSkills");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            SkillName = ".Net"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            SkillName = "Blazor"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            SkillName = "HTML/CSS"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            SkillName = "JavaScript"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            SkillName = "TypeScript"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            SkillName = "React"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            SkillName = "Angular"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            SkillName = "Vue"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            SkillName = "C#"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            SkillName = "ASP.NET Core"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            SkillName = "Entity Framework"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            SkillName = "SQL"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            SkillName = "PostgreSQL"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            SkillName = "MongoDB"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            SkillName = "Docker"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            SkillName = "Kubernetes"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            SkillName = "Azure"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            SkillName = "AWS"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            SkillName = "Git"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            SkillName = "REST API"
+                        });
                 });
 
             modelBuilder.Entity("LearnIT.Domain.Entities.Tutor", b =>

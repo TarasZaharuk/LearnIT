@@ -26,6 +26,7 @@ namespace LearnIT.Infrastructure.Persistence
         {
             modelBuilder.ApplyConfiguration(new UsersConfiguration());
             modelBuilder.ApplyConfiguration(new GendersConfiguration());
+            modelBuilder.ApplyConfiguration(new GeneralSkillsConfiguration());
             modelBuilder.ApplyConfiguration(new TutorsConfiguration());
             modelBuilder.ApplyConfiguration(new ConsultationConfiguration());
             base.OnModelCreating(modelBuilder);

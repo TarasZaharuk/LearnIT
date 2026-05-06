@@ -2,6 +2,7 @@ using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
 using LearnIT.Application.Profiles;
 using LearnIT.Application.Services;
+using LearnIT.Infrastructure;
 using LearnIT.Infrastructure.Persistence;
 using LearnIT.Infrastructure.TokenService;
 using LearnIT.Infrastructure.Persistence.Repositories;
@@ -81,6 +82,7 @@ namespace LearnIT.WebUI.Server
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<ITokenService, TokenService>();
             builder.Services.AddTransient<IEmailConfirmationService, EmailConfirmationService>();
+            builder.Services.AddScoped<DBSeeder>();
             
             // Add JWT Authentication
             var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -126,6 +128,11 @@ namespace LearnIT.WebUI.Server
             {
                 var db = scope.ServiceProvider.GetRequiredService<LearnITDBContext>();
                 db.Database.Migrate();
+
+                if (app.Environment.IsDevelopment())
+                {
+                    scope.ServiceProvider.GetRequiredService<DBSeeder>().Seed();
+                }
             }
 
             // Configure the HTTP request pipeline.
