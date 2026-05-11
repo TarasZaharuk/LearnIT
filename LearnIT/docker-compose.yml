@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: learnit_sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Pass123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - learnit-net
+    restart: unless-stopped
+
+  app:
+    image: learnit:latest
+    build: .
+    container_name: learnit_app
+    depends_on:
+      - sqlserver
+    environment:
+      ASPNETCORE_URLS: "http://+:5000"
+      LearnITDbConnectionString: "Server=learnit_sql,1433;Database=LearnIT;User Id=sa;Password=YourStrong!Pass123;TrustServerCertificate=True;"
+    ports:
+      - "5000:5000"
+
+    networks:
+      - learnit-net
+    restart: unless-stopped
+
+volumes:
+  sql_data:
+
+networks:
+  learnit-net:

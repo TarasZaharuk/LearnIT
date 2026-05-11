@@ -26,8 +26,8 @@ namespace LearnIT.Application.Services
 
         public async Task<AddUserResponse> AddAsync(AddUserModel addedUser)
         {
-            bool userWithEmaiExist = await IsExistUserWithEmail(addedUser.Email);
-            if (userWithEmaiExist)
+            bool userWithEmailExist = await IsExistUserWithEmail(addedUser.Email);
+            if (userWithEmailExist)
                 return new AddUserResponse(AddingUserIssue.DuplicateEmail);
 
             User user = _mapper.Map<AddUserModel, User>(addedUser);

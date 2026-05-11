@@ -1,0 +1,75 @@
+﻿@inherits ComponentBase
+@inject IDialogService DialogService
+@using LearnIT.Components.AppointmentsCalender
+@using System.Globalization;
+@using LearnIT.DTOs
+@using Shared
+@using MudBlazor
+
+<MudCalendar EnableResizeItems="true" EnableDragItems="true" ItemChanged="OnItemChange" CellClicked="OnCellClick" Items="@Consultations" MonthCellMinHeight="160">
+    <CellTemplate Context="context">
+        <div style="width: 100%; height: 100%; border: 2px solid purple;">
+            <div style="background-color: rgb(17, 196, 77);">
+                <MudText Style="color: #ffffff;" Typo="Typo.body1" Align="Align.Center">
+                    @context.Start.ToString("HH:mm") - @(context.End == null ? "--:--" : context.End.Value.ToString("HH:mm"))
+                </MudText>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 8px;">
+                <MudButton OnClick="@((e) => HandleItemClick(context))" Style="width: 100%; text-transform: none; justify-content: flex-start;">
+                    <MudText Typo="Typo.body2">@((context as ConsultationDTO)?.Title ?? context.Text)</MudText>
+                </MudButton>
+            </div>
+        </div>
+    </CellTemplate>
+</MudCalendar>
+@code {
+    [Parameter]
+    public EventCallback<List<ConsultationDTO>> OnSelectedItemsChange { get; set; }
+
+    [Parameter]
+    public List<ConsultationDTO> Consultations { get; set; } = new();
+
+    private CalendarItem? _selectedCalendarItem;
+
+    private List<ConsultationDTO> SelectedDayEvents = [];
+    private async Task OnCellClick(DateTime selectedDay)
+    {
+        var parameters = new DialogParameters<AddConsultationDialog>
+        {
+            { x => x.Start, selectedDay },
+            { x => x.End, selectedDay.AddHours(1) },
+        };
+        var dialog = await DialogService.ShowAsync<AddConsultationDialog>("Add Consultation", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is { Canceled: false, Data: Consultation consultation })
+        {
+            Consultations.Add(new ConsultationDTO
+            {
+                Title = consultation.Title,
+                Description = consultation.Description,
+                AttendeeId = consultation.AttendeeId,
+                TutorId = consultation.TutorId,
+                Start = consultation.Start,
+                End = consultation.End,
+            });
+        }
+
+        var selectedDate = selectedDay.Date;
+        var selectedEvents = Consultations.Where(e => e.Start.Date <= selectedDate && (e.End == null || e.End.Value.Date >= selectedDate)).ToList();
+        await OnSelectedItemsChange.InvokeAsync(selectedEvents);
+        SelectedDayEvents = selectedEvents;
+    }
+
+    private async Task OnItemChange(CalendarItem item)
+    {
+        _selectedCalendarItem = item;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleItemClick(CalendarItem item)
+    {
+        _selectedCalendarItem = item;
+        return InvokeAsync(StateHasChanged);
+    }
+}

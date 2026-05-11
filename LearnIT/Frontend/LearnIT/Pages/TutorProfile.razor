@@ -2,9 +2,11 @@
 @inject NavigationManager NavigationManeger
 @inject HttpClient httpClient
 @inject IJSRuntime JsRuntime
+@implements IDisposable
 @inject ISnackbar Snackbar
 @inject AuthenticatedHttpClient AuthenticatedHttpClient
 @inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+@inherits ComponentBase
 @using DTOs
 @using LearnIT.Components
 @using MudBlazor
@@ -87,17 +89,6 @@ else
     <p role="alert">Sorry, there's nothing at this address.</p>
 }
 
-<script>
-    window.registerOutsideClickListener = (dotNetHelper) => {
-        document.addEventListener("click", (event) => {
-            const popover = document.querySelector(".popover");
-            if (popover && !popover.contains(event.target)) {
-                dotNetHelper.invokeMethodAsync("ClosePopover");
-            }
-        });
-    };
-</script>
-
 @code {
     private int _tutorId;
 
@@ -130,6 +121,9 @@ else
     private bool _skillsListExpanded;
 
     private string _skillName = null!;
+
+    private DotNetObjectReference<TutorProfile>? _objRef;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -255,9 +249,22 @@ else
     {
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("registerOutsideClickListener", DotNetObjectReference.Create(this));
+            _objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync(
+                "registerOutsideClickListener",
+                _objRef);
         }
     }
+
+    public void Dispose()
+    {
+        if (_objRef != null)
+        {
+            JsRuntime.InvokeVoidAsync("unregisterOutsideClickListener");
+            _objRef.Dispose();
+        }
+    }
+
 
     [JSInvokable]
     public void ClosePopover()

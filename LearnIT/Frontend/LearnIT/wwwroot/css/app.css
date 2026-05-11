@@ -186,3 +186,19 @@ p {
     margin:auto;
     border:groove;
 }
+
+calender-cell {
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.calender-cell:active {
+    background-color: #e9d0f5;
+    color: white;
+}
+
+.active {
+    background-color: #e9d0f5;
+    color: white;
+}

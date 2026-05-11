@@ -1,0 +1,39 @@
+﻿@page "/tutor/appointments"
+@inherits ComponentBase
+@inject HttpClient httpClient
+@inject AuthenticatedHttpClient AuthenticatedHttpClient
+@inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+@layout MainLayout
+@using System.Globalization;
+@using LearnIT.Components;
+@using LearnIT.DTOs
+
+<h3>TutorsAppointments</h3>
+
+<MudCustomCalendar Consultations="@_consultations" OnSelectedItemsChange="OnselectedItemsChange"></MudCustomCalendar>
+
+
+
+@code {
+
+    private bool _isOpen = false;
+
+    private int _userId; 
+
+    private List<ConsultationDTO> _consultations = [];
+
+    private List<ConsultationDTO> _selectedItems = [];
+
+    private void OnselectedItemsChange(List<ConsultationDTO> items)
+    {
+        _isOpen = !_isOpen;
+        _selectedItems = items;
+        // Handle the selected items change
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await UserAuthenticationStateProvider.GetAuthenticatedUserIdAsync();
+        _consultations = await AuthenticatedHttpClient.GetAsync<List<ConsultationDTO>>($"/consultations/user/{_userId}") ?? [];
+    }
+}

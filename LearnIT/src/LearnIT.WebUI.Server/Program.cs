@@ -2,6 +2,7 @@ using LearnIT.Application.Interfaces.Repositories;
 using LearnIT.Application.Interfaces.Services;
 using LearnIT.Application.Profiles;
 using LearnIT.Application.Services;
+using LearnIT.Infrastructure;
 using LearnIT.Infrastructure.Persistence;
 using LearnIT.Infrastructure.TokenService;
 using LearnIT.Infrastructure.Persistence.Repositories;
@@ -33,19 +34,36 @@ namespace LearnIT.WebUI.Server
                            .AllowAnyHeader();
                 }
                 ));
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+
+            // Add JWT Authentication for Swagger UI
+            builder.Services.AddSwaggerGen(c =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                c.SwaggerDoc("v1", new() { Title = "FitnessClub API", Version = "v1" });
+
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-                };
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Enter 'Bearer' [space] and then your valid JWT token.\n\nExample: \"Bearer eyJhbGciOiJIUzI1NiIs...\""
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -57,11 +75,38 @@ namespace LearnIT.WebUI.Server
             builder.Services.AddTransient<ITutorsRepository, TutorsRepository>();
             builder.Services.AddTransient<ISkillsRepository, SkillsRepository>();
             builder.Services.AddTransient<IGendersRepository, GendersRepository>();
+            builder.Services.AddTransient<IConsultationsRepository, ConsultationsRepository>();
             builder.Services.AddTransient<IUsersService, UsersService>();
             builder.Services.AddTransient<ITutorsService, TutorsService>();
+            builder.Services.AddTransient<IConsultationsService, ConsultationsService>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<ITokenService, TokenService>();
             builder.Services.AddTransient<IEmailConfirmationService, EmailConfirmationService>();
+            builder.Services.AddScoped<DBSeeder>();
+            
+            // Add JWT Authentication
+            var jwtSettings = builder.Configuration.GetSection("Jwt");
+            var secretKey = jwtSettings["Key"] ?? throw new Exception("JwtSettings:SecretKey is not configured");
+            
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings["Audience"],
+                    ValidateLifetime = true
+                };
+            });
+            
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("ElevatedRights", policy =>
@@ -79,6 +124,17 @@ namespace LearnIT.WebUI.Server
                 });
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<LearnITDBContext>();
+                db.Database.Migrate();
+
+                if (app.Environment.IsDevelopment())
+                {
+                    scope.ServiceProvider.GetRequiredService<DBSeeder>().Seed();
+                }
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -86,7 +142,10 @@ namespace LearnIT.WebUI.Server
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            app.MapFallbackToFile("index.html");
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles();
+
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors("AllowAll");

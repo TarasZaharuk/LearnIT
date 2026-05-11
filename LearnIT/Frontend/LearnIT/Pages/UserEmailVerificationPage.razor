@@ -47,14 +47,6 @@
     </MudCard>
 </MudContainer>
 
-<script>
-    window.registerVisibilityChangeHandler = (dotNetObjRef) => {
-        document.addEventListener('visibilitychange', () => {
-            dotNetObjRef.invokeMethodAsync('OnTabVisibilityChanged', document.visibilityState);
-        });
-    };
-</script>
-
 
 @code {
     private DotNetObjectReference<UserEmailVerificationPage>? objRef;
@@ -113,5 +105,6 @@
     public void Dispose()
     {
         objRef?.Dispose();
+        JSRuntime.InvokeVoidAsync("unregisterViewportChangeCallback");
     }
 }

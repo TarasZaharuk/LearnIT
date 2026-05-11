@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "name": "Start Backend",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/LearnIT/src/LearnIT.WebUI.Server/LearnIT.WebUI.Server.csproj"
+    },
+    {
+      "name": "Start Frontend",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/LearnIT/Frontend/LearnIT/LearnIT.csproj"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Start Full App",
+      "configurations": [
+        "Start Backend",
+        "Start Frontend"
+      ]
+    }
+  ]
+}

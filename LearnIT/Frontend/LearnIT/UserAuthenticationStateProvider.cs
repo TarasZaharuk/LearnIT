@@ -29,6 +29,12 @@ namespace LearnIT
             }
 
             var handler = new JwtSecurityTokenHandler();
+            if (!handler.CanReadToken(token))
+            {
+                await _localStorageService.RemoveItemAsync(AuthTokenItem);
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            }
+
             JwtSecurityToken jwtToken = handler.ReadJwtToken(token);
 
             if (jwtToken.ValidTo < DateTime.UtcNow)
@@ -74,9 +80,14 @@ namespace LearnIT
         public async Task Login(UserLoginModel userLoginModel)
         {
             HttpResponseMessage response = await _authenticatedHttpClient.PostAsync<UserLoginModel>("/login", userLoginModel);
+            if (!response.IsSuccessStatusCode)
+            {
+                await _localStorageService.RemoveItemAsync(AuthTokenItem);
+                return;
+            }
 
-            string? token = await response.Content.ReadAsStringAsync();
-            if (token != null)
+            string token = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(token))
                 await MarkUserAsAuthenticated(token);
         }
 
@@ -86,7 +97,8 @@ namespace LearnIT
             if (responseMessage.IsSuccessStatusCode)
             {
                 string updatedToken = await responseMessage.Content.ReadAsStringAsync();
-                await MarkUserAsAuthenticated(updatedToken);
+                if (!string.IsNullOrWhiteSpace(updatedToken))
+                    await MarkUserAsAuthenticated(updatedToken);
             }
         }
 

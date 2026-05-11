@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject UserAuthenticationStateProvider UserAuthenticationStateProvider
+
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider FullWidth="true"
@@ -12,23 +14,28 @@
 <div class="page" style="padding:0; left:0;">
     <div class="sidebar" style="padding:0; left:0;">
         <h1 style="margin-left:10px">LearnIT</h1>
-        <NavMenu />
+        @if (_isUserInTutorRole)
+        {
+            <TutorViewNavMenu />
+        }
+        else
+        {
+            <NavMenu />
+        }
     </div>
 
-    <main>
-        <article class="content px-4" style="padding:0; left:0;">
+    <main style="padding:4; margin:4; width:100%;">
+        <article class="content" style="padding:0; margin:0; width:100%;">
             @Body
         </article>
     </main>
 </div>
 
-<script>
-    window.registerViewportChangeCallback = (dotnetHelper) => {
-        window.addEventListener('load', () => {
-            dotnetHelper.invokeMethodAsync('OnResize', window.innerWidth, window.innerHeight);
-        });
-        window.addEventListener('resize', () => {
-            dotnetHelper.invokeMethodAsync('OnResize', window.innerWidth, window.innerHeight);
-        });
+@code {
+    bool _isUserInTutorRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isUserInTutorRole = await UserAuthenticationStateProvider.IsUserInRole("Tutor");
     }
-</script>
+}
