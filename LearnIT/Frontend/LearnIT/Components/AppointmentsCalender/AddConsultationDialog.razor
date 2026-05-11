@@ -1,6 +1,7 @@
-﻿@using LearnIT.DTOs
+@using LearnIT.DTOs
 @using LearnIT.Components
 @using MudBlazor
+@using Shared
 @inherits ComponentBase
 <MudDialog>
     <DialogContent>
@@ -8,7 +9,7 @@
         <MudGrid>
             <MudItem xs="12" sm="6">
                 <MudTextField Label="Title" FullWidth="true" @bind-Value="Title"></MudTextField>
-                <MudTextField Label="Attendee" FullWidth="true" @bind-Value="Attendee"></MudTextField>
+                <MudTextField T="int" Label="Attendee (UserId)" FullWidth="true" @bind-Value="Attendee"></MudTextField>
                 <MudTextField Adornment=Adornment.End AdornmentIcon="@Icons.Material.Filled.CalendarToday" OnAdornmentClick="OpenDatePickerPopover" T="string" ReadOnly="true" Label="DateRange" FullWidth="true" Text="@($"{Start:ddd dd/MM/yyyy}, {Start:HH:mm} - {End:HH:mm}")"></MudTextField>
                 <MudDivider />
                 <MudCollapse Expanded="_expanded">
@@ -27,7 +28,7 @@
         </MudGrid>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create">Create</MudButton>
         <MudButton Color="Color.Default" Variant="Variant.Text" OnClick="CloseDialog">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
@@ -35,14 +36,19 @@
 @code {
     public string Title { get; set; } = string.Empty;
 
-    public string Attendee { get; set; } = string.Empty;
+    public int Attendee { get; set; }
 
     public string Description { get; set; } = string.Empty;
 
+    [Parameter]
     public DateTime Start { get; set; } = DateTime.Now;
+
+    [Parameter]
     public DateTime End { get; set; } = DateTime.Now.AddHours(1);
 
-    private bool _isPopoverOpen;
+    [Parameter]
+    public int TutorId { get; set; }
+
     private DateTime? _selectedDate;
     private TimeSpan? _startTime;
     private TimeSpan? _endTime;
@@ -61,23 +67,34 @@
         _expanded = !_expanded;
     }
 
-    public void ClosePopover()
-    {
-        _expanded = false;
-    }
-
     public void CloseDialog()
     {
-        MudDialog.Close();
+        MudDialog.Cancel();
     }
 
-    public void ApplyDateTimeSelection()
+    private void Create()
+    {
+        ApplyDateTimeSelection();
+
+        var consultation = new Consultation
+        {
+            Title = Title,
+            Description = string.IsNullOrWhiteSpace(Description) ? null : Description,
+            AttendeeId = Attendee,
+            TutorId = TutorId,
+            Start = Start,
+            End = End,
+        };
+
+        MudDialog.Close(DialogResult.Ok(consultation));
+    }
+
+    private void ApplyDateTimeSelection()
     {
         if (_selectedDate.HasValue && _startTime.HasValue && _endTime.HasValue)
         {
             Start = _selectedDate.Value.Add(_startTime.Value);
             End = _selectedDate.Value.Add(_endTime.Value);
         }
-        _isPopoverOpen = false;
     }
 }

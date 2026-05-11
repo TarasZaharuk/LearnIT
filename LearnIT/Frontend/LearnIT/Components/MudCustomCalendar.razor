@@ -34,12 +34,31 @@
     private List<ConsultationDTO> SelectedDayEvents = [];
     private async Task OnCellClick(DateTime selectedDay)
     {
-        await DialogService.ShowAsync<AddConsultationDialog>("Add Consultation");
-        var selectedDate = selectedDay.Date.Date;
+        var parameters = new DialogParameters<AddConsultationDialog>
+        {
+            { x => x.Start, selectedDay },
+            { x => x.End, selectedDay.AddHours(1) },
+        };
+        var dialog = await DialogService.ShowAsync<AddConsultationDialog>("Add Consultation", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is { Canceled: false, Data: Consultation consultation })
+        {
+            Consultations.Add(new ConsultationDTO
+            {
+                Title = consultation.Title,
+                Description = consultation.Description,
+                AttendeeId = consultation.AttendeeId,
+                TutorId = consultation.TutorId,
+                Start = consultation.Start,
+                End = consultation.End,
+            });
+        }
+
+        var selectedDate = selectedDay.Date;
         var selectedEvents = Consultations.Where(e => e.Start.Date <= selectedDate && (e.End == null || e.End.Value.Date >= selectedDate)).ToList();
         await OnSelectedItemsChange.InvokeAsync(selectedEvents);
         SelectedDayEvents = selectedEvents;
-
     }
 
     private async Task OnItemChange(CalendarItem item)

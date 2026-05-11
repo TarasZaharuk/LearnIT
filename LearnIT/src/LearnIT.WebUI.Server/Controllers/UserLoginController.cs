@@ -34,7 +34,7 @@ namespace LearnIT.WebUI.Server.Controllers
                 return Unauthorized();
             
             string tokenString = _tokenService.GenerateAuthenticationToken(user);
-            return Ok(tokenString);
+            return Content(tokenString, "text/plain");
         }
 
         [Authorize(Roles = "User")]
@@ -48,7 +48,7 @@ namespace LearnIT.WebUI.Server.Controllers
             if (user == null)
                 return Unauthorized();
             string tokenString = _tokenService.GenerateAuthenticationToken(user);
-            return Ok(tokenString);
+            return Content(tokenString, "text/plain");
         }
 
         private async Task<UserDTO?> AuthenticateUser(UserLoginModel loginModel)
