@@ -11,12 +11,11 @@ It includes user authentication, email verification, and profile management — 
 
 ## 🌐 Features
 
-- 🔐 **Authentication System** – Secure login and registration for users.  
-- ✉️ **Email Verification** – Confirm your account via email before accessing key features.  
 - 👥 **Tutor & Student Profiles** – Display your skills, experience, and learning goals.  
 - 📅 **Appointments** – Schedule sessions with tutors and manage upcoming meetings.  
 - 💬 **Request System (in progress)** – Easily request help from available tutors.  
 - 📞 **Meeting System (in development)** – Seamless video or chat sessions directly within the platform.
+- 🔐/✉️ **Authentication System + Email Verification** – Secure login and registration for users.  
 
 ---
 
