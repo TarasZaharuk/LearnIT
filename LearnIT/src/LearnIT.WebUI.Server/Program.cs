@@ -38,7 +38,7 @@ namespace LearnIT.WebUI.Server
             // Add JWT Authentication for Swagger UI
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new() { Title = "FitnessClub API", Version = "v1" });
+                c.SwaggerDoc("v1", new() { Title = "LearnIT API", Version = "v1" });
 
                 c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
@@ -69,7 +69,15 @@ namespace LearnIT.WebUI.Server
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             string connectionString = builder.Configuration["LearnITDbConnectionString"] ?? throw new Exception("DBConectionString is null");
-            builder.Services.AddDbContext<LearnITDBContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<LearnITDBContext>(options =>
+                options.UseSqlServer(connectionString, sqlOptions =>
+                    // Azure SQL throws transient errors on failover and when a serverless
+                    // database resumes from auto-pause, so retries are required there.
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 6,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null)));
+            builder.Services.AddHealthChecks();
             builder.Services.AddAutoMapper(typeof(UserProfile).Assembly);
             builder.Services.AddTransient<IUsersRepository, UsersRepository>();
             builder.Services.AddTransient<ITutorsRepository, TutorsRepository>();
@@ -150,6 +158,8 @@ namespace LearnIT.WebUI.Server
             app.UseAuthorization();
             app.UseCors("AllowAll");
             app.MapControllers();
+            // Liveness probe for the ACI container group / deployment smoke test.
+            app.MapHealthChecks("/health").AllowAnonymous();
             app.Run();
         }
     }

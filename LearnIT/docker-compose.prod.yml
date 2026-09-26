@@ -1,0 +1,28 @@
+# Production-shaped stack: the published image only, talking to Azure SQL Database.
+# Used to smoke-test the exact image/config combination that goes to ACI:
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up
+#
+services:
+  app:
+    image: ${ACR_LOGIN_SERVER}/${IMAGE_NAME:-learnit}:${IMAGE_TAG:-latest}
+    container_name: learnit_app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      # Azure SQL: Encrypt=True is mandatory, do NOT set TrustServerCertificate.
+      LearnITDbConnectionString: ${SQL_CONNECTION_STRING:?SQL_CONNECTION_STRING must be set}
+      BaseServerAddress: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL must be set}
+      EmailConfirmationControllerAddress: ${PUBLIC_BASE_URL}/email
+      HomeFrontedPageAddress: ${PUBLIC_BASE_URL}/
+      Jwt__Key: ${JWT_KEY:?JWT_KEY must be set}
+      Jwt__Issuer: ${JWT_ISSUER:-LearnITServer}
+      Jwt__Audience: ${JWT_AUDIENCE:-LearnITServer}
+      SmtpClientSettings__Host: ${SMTP_HOST:-smtp.gmail.com}
+      SmtpClientSettings__Port: ${SMTP_PORT:-587}
+      SmtpClientSettings__UserName: ${SMTP_USERNAME:-}
+      SmtpClientSettings__Password: ${SMTP_PASSWORD:-}
+      SenderEmail: ${SENDER_EMAIL:-}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    restart: unless-stopped

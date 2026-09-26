@@ -1,0 +1,335 @@
+# Azure DevOps pipeline: build the LearnIT image, push it to ACR, then deploy it
+# to Azure Container Apps (default) or Azure Container Instances, against Azure SQL.
+#
+# Pick the target with the deployTarget parameter when you queue the run, or change
+# its default below. See DEPLOYMENT.md for which one to use and why.
+#
+# Prerequisites in Azure DevOps (Project settings):
+#   * Service connection  -> Docker Registry  -> Azure Container Registry   (name in acrServiceConnection)
+#   * Service connection  -> Azure Resource Manager                          (name in azureSubscription)
+#   * Variable group 'learnit-secrets' (ideally linked to Azure Key Vault) holding:
+#       SQL_CONNECTION_STRING, JWT_KEY, SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL
+#     Mark every one of them as secret.
+
+parameters:
+  - name: deployTarget
+    displayName: Deployment target
+    type: string
+    default: containerapp
+    values:
+      - containerapp
+      - containerinstance
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - DEPLOYMENT.md
+      - DescriptionImages/*
+
+pr: none
+
+variables:
+  - group: learnit-secrets
+
+  # ---- registry / image ----
+  - name: acrServiceConnection
+    value: learnit-acr
+  - name: acrName
+    value: acrlearnit
+  - name: acrLoginServer
+    value: acrlearnit.azurecr.io
+  - name: imageRepository
+    value: learnit
+  - name: imageTag
+    value: $(Build.BuildId)
+
+  # ---- build context ----
+  - name: dockerfilePath
+    value: $(Build.SourcesDirectory)/LearnIT/Dockerfile
+  - name: buildContext
+    value: $(Build.SourcesDirectory)/LearnIT
+
+  # ---- Azure ----
+  # Name of the Azure Resource Manager *service connection* in Azure DevOps -
+  # not the Azure subscription itself. It must match the connection name exactly.
+  - name: azureSubscription
+    value: "Azure subscription 1"
+  - name: resourceGroup
+    value: rg-learnit
+  - name: location
+    value: westeurope
+  - name: containerPort
+    value: 8080
+
+  # ---- Container Apps target ----
+  - name: acaApp
+    value: learnit
+  - name: acaMinReplicas
+    value: 1
+  # Keep at 1 while EF migrations run at app startup - see DEPLOYMENT.md.
+  - name: acaMaxReplicas
+    value: 1
+
+  # ---- Container Instances target ----
+  - name: aciName
+    value: learnit-app
+  - name: dnsNameLabel
+    value: learnit-app
+  - name: aciCpu
+    value: 1
+  - name: aciMemoryGb
+    value: 1.5
+
+stages:
+  - stage: Build
+    displayName: Build and push image
+    jobs:
+      - job: BuildPush
+        displayName: docker build / push
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Docker@2
+            displayName: Build and push $(imageRepository)
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(acrServiceConnection)
+              repository: $(imageRepository)
+              Dockerfile: $(dockerfilePath)
+              buildContext: $(buildContext)
+              tags: |
+                $(imageTag)
+                latest
+
+  # =====================================================================
+  # Azure Container Apps (recommended): zero-downtime revisions, managed HTTPS.
+  # The app itself is provisioned once by deploy/deploy-aca.sh.
+  # =====================================================================
+  - ${{ if eq(parameters.deployTarget, 'containerapp') }}:
+      - stage: DeployContainerApp
+        displayName: Deploy to Azure Container Apps
+        dependsOn: Build
+        condition: succeeded()
+        jobs:
+          - deployment: DeployAca
+            displayName: az containerapp update
+            pool:
+              vmImage: ubuntu-latest
+            environment: learnit-aca
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - task: AzureCLI@2
+                      displayName: Roll out new revision
+                      inputs:
+                        azureSubscription: $(azureSubscription)
+                        scriptType: bash
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -euo pipefail
+                          az extension add --name containerapp --upgrade --only-show-errors
+
+                          IMAGE="$(acrLoginServer)/$(imageRepository):$(imageTag)"
+
+                          if ! az containerapp show -g "$(resourceGroup)" -n "$(acaApp)" -o none 2>/dev/null; then
+                            echo "Container app '$(acaApp)' not found." >&2
+                            echo "Provision it once with deploy/deploy-aca.sh, then re-run." >&2
+                            exit 1
+                          fi
+
+                          # Ingress FQDN is stable across revisions, so it can be fed back
+                          # in as BaseServerAddress on every deploy.
+                          FQDN=$(az containerapp show -g "$(resourceGroup)" -n "$(acaApp)" \
+                            --query properties.configuration.ingress.fqdn -o tsv)
+                          PUBLIC_BASE_URL="https://${FQDN}"
+                          echo "Deploying ${IMAGE} -> ${PUBLIC_BASE_URL}"
+
+                          az containerapp secret set \
+                            -g "$(resourceGroup)" -n "$(acaApp)" \
+                            --secrets \
+                              "sql-connection-string=$SQL_CONNECTION_STRING" \
+                              "jwt-key=$JWT_KEY" \
+                              "smtp-username=$SMTP_USERNAME" \
+                              "smtp-password=$SMTP_PASSWORD" \
+                              "sender-email=$SENDER_EMAIL" \
+                            --output none
+
+                          az containerapp update \
+                            -g "$(resourceGroup)" -n "$(acaApp)" \
+                            --image "$IMAGE" \
+                            --min-replicas $(acaMinReplicas) \
+                            --max-replicas $(acaMaxReplicas) \
+                            --set-env-vars \
+                              ASPNETCORE_ENVIRONMENT=Production \
+                              ASPNETCORE_HTTP_PORTS=$(containerPort) \
+                              "LearnITDbConnectionString=secretref:sql-connection-string" \
+                              "Jwt__Key=secretref:jwt-key" \
+                              Jwt__Issuer=LearnITServer \
+                              Jwt__Audience=LearnITServer \
+                              "BaseServerAddress=${PUBLIC_BASE_URL}" \
+                              "EmailConfirmationControllerAddress=${PUBLIC_BASE_URL}/email" \
+                              "HomeFrontedPageAddress=${PUBLIC_BASE_URL}/" \
+                              SmtpClientSettings__Host=smtp.gmail.com \
+                              SmtpClientSettings__Port=587 \
+                              "SmtpClientSettings__UserName=secretref:smtp-username" \
+                              "SmtpClientSettings__Password=secretref:smtp-password" \
+                              "SenderEmail=secretref:sender-email" \
+                            --output none
+
+                          echo "Deployed. App URL: ${PUBLIC_BASE_URL}"
+                      # Secrets are mapped explicitly - they are not injected into the
+                      # script environment automatically.
+                      env:
+                        SQL_CONNECTION_STRING: $(SQL_CONNECTION_STRING)
+                        JWT_KEY: $(JWT_KEY)
+                        SMTP_USERNAME: $(SMTP_USERNAME)
+                        SMTP_PASSWORD: $(SMTP_PASSWORD)
+                        SENDER_EMAIL: $(SENDER_EMAIL)
+
+                    - task: AzureCLI@2
+                      displayName: Wait for /health, roll back on failure
+                      inputs:
+                        azureSubscription: $(azureSubscription)
+                        scriptType: bash
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -euo pipefail
+                          az extension add --name containerapp --upgrade --only-show-errors
+
+                          FQDN=$(az containerapp show -g "$(resourceGroup)" -n "$(acaApp)" \
+                            --query properties.configuration.ingress.fqdn -o tsv)
+
+                          for i in {1..30}; do
+                            if curl -fsS --max-time 10 "https://${FQDN}/health" >/dev/null; then
+                              echo "Healthy: https://${FQDN}"
+                              exit 0
+                            fi
+                            echo "Attempt $i - not ready yet, retrying in 10s..."
+                            sleep 10
+                          done
+
+                          echo "New revision did not become healthy. Recent logs:"
+                          az containerapp logs show -g "$(resourceGroup)" -n "$(acaApp)" --tail 200 || true
+
+                          PREVIOUS=$(az containerapp revision list -g "$(resourceGroup)" -n "$(acaApp)" \
+                            --query "sort_by([?properties.active], &properties.createdTime)[-2].name" -o tsv)
+                          if [[ -n "$PREVIOUS" && "$PREVIOUS" != "None" ]]; then
+                            echo "Shifting all traffic back to $PREVIOUS"
+                            az containerapp ingress traffic set -g "$(resourceGroup)" -n "$(acaApp)" \
+                              --revision-weight "${PREVIOUS}=100" --output none
+                          else
+                            echo "No previous active revision to roll back to."
+                          fi
+                          exit 1
+
+  # =====================================================================
+  # Azure Container Instances: HTTP only, and the group is replaced on every
+  # deploy (ACI cannot patch most properties), so expect a short outage.
+  # =====================================================================
+  - ${{ if eq(parameters.deployTarget, 'containerinstance') }}:
+      - stage: DeployContainerInstance
+        displayName: Deploy to Azure Container Instances
+        dependsOn: Build
+        condition: succeeded()
+        jobs:
+          - deployment: DeployAci
+            displayName: az container create
+            pool:
+              vmImage: ubuntu-latest
+            environment: learnit-aci
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - task: AzureCLI@2
+                      displayName: (Re)create container group
+                      inputs:
+                        azureSubscription: $(azureSubscription)
+                        scriptType: bash
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -euo pipefail
+
+                          FQDN="$(dnsNameLabel).$(location).azurecontainer.io"
+                          PUBLIC_BASE_URL="http://${FQDN}:$(containerPort)"
+                          echo "Deploying $(acrLoginServer)/$(imageRepository):$(imageTag) -> ${PUBLIC_BASE_URL}"
+
+                          # ACR credentials for the ACI image pull. Prefer a managed identity
+                          # with AcrPull over the admin user in a long-lived environment.
+                          ACR_USER=$(az acr credential show -n "$(acrName)" --query username -o tsv)
+                          ACR_PASS=$(az acr credential show -n "$(acrName)" --query 'passwords[0].value' -o tsv)
+
+                          # Delete first: `az container create` cannot update most properties in place.
+                          az container delete \
+                            --resource-group "$(resourceGroup)" \
+                            --name "$(aciName)" \
+                            --yes 2>/dev/null || true
+
+                          az container create \
+                            --resource-group "$(resourceGroup)" \
+                            --name "$(aciName)" \
+                            --image "$(acrLoginServer)/$(imageRepository):$(imageTag)" \
+                            --os-type Linux \
+                            --location "$(location)" \
+                            --cpu $(aciCpu) \
+                            --memory $(aciMemoryGb) \
+                            --ports $(containerPort) \
+                            --protocol TCP \
+                            --ip-address Public \
+                            --dns-name-label "$(dnsNameLabel)" \
+                            --restart-policy Always \
+                            --registry-login-server "$(acrLoginServer)" \
+                            --registry-username "$ACR_USER" \
+                            --registry-password "$ACR_PASS" \
+                            --environment-variables \
+                              ASPNETCORE_ENVIRONMENT=Production \
+                              ASPNETCORE_HTTP_PORTS=$(containerPort) \
+                              BaseServerAddress="${PUBLIC_BASE_URL}" \
+                              EmailConfirmationControllerAddress="${PUBLIC_BASE_URL}/email" \
+                              HomeFrontedPageAddress="${PUBLIC_BASE_URL}/" \
+                              Jwt__Issuer=LearnITServer \
+                              Jwt__Audience=LearnITServer \
+                              SmtpClientSettings__Host=smtp.gmail.com \
+                              SmtpClientSettings__Port=587 \
+                            --secure-environment-variables \
+                              LearnITDbConnectionString="$SQL_CONNECTION_STRING" \
+                              Jwt__Key="$JWT_KEY" \
+                              SmtpClientSettings__UserName="$SMTP_USERNAME" \
+                              SmtpClientSettings__Password="$SMTP_PASSWORD" \
+                              SenderEmail="$SENDER_EMAIL"
+
+                          echo "Deployed. App URL: ${PUBLIC_BASE_URL}"
+                      env:
+                        SQL_CONNECTION_STRING: $(SQL_CONNECTION_STRING)
+                        JWT_KEY: $(JWT_KEY)
+                        SMTP_USERNAME: $(SMTP_USERNAME)
+                        SMTP_PASSWORD: $(SMTP_PASSWORD)
+                        SENDER_EMAIL: $(SENDER_EMAIL)
+
+                    - task: AzureCLI@2
+                      displayName: Wait for /health
+                      inputs:
+                        azureSubscription: $(azureSubscription)
+                        scriptType: bash
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -euo pipefail
+                          URL="http://$(dnsNameLabel).$(location).azurecontainer.io:$(containerPort)/health"
+
+                          for i in {1..30}; do
+                            if curl -fsS --max-time 10 "$URL" >/dev/null; then
+                              echo "Healthy: $URL"
+                              exit 0
+                            fi
+                            echo "Attempt $i - not ready yet, retrying in 10s..."
+                            sleep 10
+                          done
+
+                          echo "Container did not become healthy in time. Recent logs:"
+                          az container logs --resource-group "$(resourceGroup)" --name "$(aciName)" --tail 200 || true
+                          exit 1

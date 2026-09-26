@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local secrets / deployment env files
+.env
+.env.*
+!.env.example
+deploy/aci.env
+deploy/aca.env
